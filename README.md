@@ -74,6 +74,9 @@ dsa-visualizer/
 │
 └── README.md
 
+## Live Demo
+
+[View Live Project](https://dsa-visualizer-qw6f3w9j6-rehantambalas-projects.vercel.app/)
 ## Screenshots
 
 ![Array Visualizer](./screenshots/Array.png)

@@ -8,18 +8,15 @@ function SortingStage({
   sortedIndices,
   currentStepType,
 }) {
-  const maxValue = values.length > 0 ? Math.max(...values) : 1;
-
   return (
     <section className="visual-panel stage-block stage-delay-3 sorting-stage-panel">
       <div className="visual-header">
         <div className="panel-title">SORTING STAGE</div>
-        <div className="visual-hint">Neon bars show comparisons, swaps, pivot focus, and sorted locks.</div>
+        <div className="visual-hint">Square pixel cards show compare, swap, pivot, and sorted states.</div>
       </div>
 
       <div className="sorting-stage-wrap">
         {values.map((value, index) => {
-          const normalizedHeight = Math.max(12, (value / maxValue) * 100);
           const isCompared = comparedIndices.includes(index);
           const isSwapped = swappedIndices.includes(index);
           const isPivot = pivotIndex === index;
@@ -27,9 +24,9 @@ function SortingStage({
 
           return (
             <div
-              key={`sort-bar-${index}`}
+              key={`sort-card-${index}`}
               className={[
-                "sorting-bar-shell",
+                "sorting-card-shell",
                 isCompared ? "is-compared" : "",
                 isSwapped ? "is-swapped" : "",
                 isPivot ? "is-pivot" : "",
@@ -39,11 +36,8 @@ function SortingStage({
                 .join(" ")
                 .trim()}
             >
-              <div className="sorting-bar-grid" />
-              <div className="sorting-bar" style={{ height: `${normalizedHeight}%` }} />
-              <div className="sorting-bar-value">
-                <PixelNumber value={value} active={isCompared || isSwapped || isPivot || isSorted} />
-              </div>
+              <PixelNumber value={value} active={isCompared || isSwapped || isPivot || isSorted} />
+              <div className="sorting-card-energy" />
             </div>
           );
         })}

@@ -1,4 +1,3 @@
-import "../sorting/sorting.css";
 import { useMemo, useState } from 'react';
 import BinaryTreeControls from './BinaryTreeControls.jsx';
 import BinaryTreeStage from './BinaryTreeStage.jsx';

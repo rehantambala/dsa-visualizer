@@ -1,4 +1,3 @@
-import "../sorting/sorting.css";
 import { useState } from 'react';
 import GridControls from './GridControls.jsx';
 import GridStage from './GridStage.jsx';

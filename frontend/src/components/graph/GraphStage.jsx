@@ -4,11 +4,11 @@ function GraphStage({ nodes, edges, activeNodes }) {
   return (
     <section className="visual-panel stage-block stage-delay-3">
       <div className="panel-title">GRAPH STAGE</div>
-      <div className="sorting-stage-wrap algo-stage-grid">
+      <div className="sorting-stage-wrap" style={{ minHeight: 220 }}>
         {nodes.map((n) => (
-          <div key={n.id} className={`sorting-card-shell ${activeNodes.includes(n.id) ? 'is-swapped' : ''}`}>
-            <PixelNumber value={n.id} active={activeNodes.includes(n.id)} />
-            <div className="sorting-card-energy" />
+          <div key={n.id} className={`sorting-bar-shell ${activeNodes.includes(n.id) ? 'is-swapped' : ''}`}>
+            <div className="sorting-bar" style={{ height: '70%' }} />
+            <div className="sorting-bar-value"><PixelNumber value={n.id} active={activeNodes.includes(n.id)} /></div>
           </div>
         ))}
       </div>

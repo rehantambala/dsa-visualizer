@@ -1,4 +1,3 @@
-import "../sorting/sorting.css";
 import { useState } from 'react';
 import GraphControls from './GraphControls.jsx';
 import GraphStage from './GraphStage.jsx';

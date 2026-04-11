@@ -30,6 +30,10 @@ import StackVisualizer from "./components/stack/StackVisualizer.jsx";
 import QueueVisualizer from "./components/queue/QueueVisualizer.jsx";
 import LinkedListVisualizer from "./components/linkedlist/LinkedListVisualizer.jsx";
 import SortingVisualizer from "./components/sorting/SortingVisualizer.jsx";
+import BinaryTreeVisualizer from "./components/tree/BinaryTreeVisualizer.jsx";
+import GraphVisualizer from "./components/graph/GraphVisualizer.jsx";
+import PathfindingVisualizer from "./components/pathfinding/PathfindingVisualizer.jsx";
+import AnalyticsDashboard from "./components/AnalyticsDashboard.jsx";
 
 function App() {
   const [mode, setMode] = useState("sorting");
@@ -511,6 +515,10 @@ function App() {
     if (displayMode === "linked-list") {
       return <LinkedListVisualizer pagePhase={transitionPhase} />;
     }
+    if (displayMode === "tree") return <BinaryTreeVisualizer pagePhase={transitionPhase} />;
+    if (displayMode === "graph") return <GraphVisualizer pagePhase={transitionPhase} />;
+    if (displayMode === "pathfinding") return <PathfindingVisualizer pagePhase={transitionPhase} />;
+    if (displayMode === "analytics") return <AnalyticsDashboard pagePhase={transitionPhase} />;
 
     return <SortingVisualizer pagePhase={transitionPhase} />;
   };
@@ -581,6 +589,7 @@ function App() {
             LINKED LIST
           </button>
 
+
           <button
             className={`nav-link ${mode === "sorting" ? "active" : ""}`}
             onClick={(event) => handleModeChange("sorting", event)}
@@ -588,6 +597,11 @@ function App() {
           >
             SORTING
           </button>
+
+          <button className={`nav-link ${mode === "tree" ? "active" : ""}`} onClick={(event) => handleModeChange("tree", event)} type="button">TREE</button>
+          <button className={`nav-link ${mode === "graph" ? "active" : ""}`} onClick={(event) => handleModeChange("graph", event)} type="button">GRAPH</button>
+          <button className={`nav-link ${mode === "pathfinding" ? "active" : ""}`} onClick={(event) => handleModeChange("pathfinding", event)} type="button">PATH</button>
+          <button className={`nav-link ${mode === "analytics" ? "active" : ""}`} onClick={(event) => handleModeChange("analytics", event)} type="button">ANALYTICS</button>
         </nav>
       </header>
 

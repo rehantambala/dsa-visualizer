@@ -29,10 +29,11 @@ import PixelArrayDisplay from "./components/array/PixelArrayDisplay.jsx";
 import StackVisualizer from "./components/stack/StackVisualizer.jsx";
 import QueueVisualizer from "./components/queue/QueueVisualizer.jsx";
 import LinkedListVisualizer from "./components/linkedlist/LinkedListVisualizer.jsx";
+import SortingVisualizer from "./components/sorting/SortingVisualizer.jsx";
 
 function App() {
-  const [mode, setMode] = useState("queue");
-  const [displayMode, setDisplayMode] = useState("queue");
+  const [mode, setMode] = useState("sorting");
+  const [displayMode, setDisplayMode] = useState("sorting");
   const [transitionPhase, setTransitionPhase] = useState("idle");
   const [transitionOrigin, setTransitionOrigin] = useState({ x: 0, y: 0 });
 
@@ -507,7 +508,11 @@ function App() {
       return <QueueVisualizer pagePhase={transitionPhase} />;
     }
 
-    return <LinkedListVisualizer pagePhase={transitionPhase} />;
+    if (displayMode === "linked-list") {
+      return <LinkedListVisualizer pagePhase={transitionPhase} />;
+    }
+
+    return <SortingVisualizer pagePhase={transitionPhase} />;
   };
 
   return (
@@ -574,6 +579,14 @@ function App() {
             type="button"
           >
             LINKED LIST
+          </button>
+
+          <button
+            className={`nav-link ${mode === "sorting" ? "active" : ""}`}
+            onClick={(event) => handleModeChange("sorting", event)}
+            type="button"
+          >
+            SORTING
           </button>
         </nav>
       </header>

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import SortingControls from "./SortingControls.jsx";
 import SortingStage from "./SortingStage.jsx";
 import SortingLearningPanel from "./SortingLearningPanel.jsx";
+import HistoryPanel from "../shared/HistoryPanel.jsx";
+import { api } from "../../services/api.js";
 import "./sorting.css";
 
 const BASE_ARRAY = [33, 12, 48, 7, 25, 39, 4, 19, 42, 16];
@@ -221,6 +223,8 @@ function SortingVisualizer({ pagePhase = "idle" }) {
   const [stepIndex, setStepIndex] = useState(0);
   const [speed, setSpeed] = useState(280);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [selectedHistoryId, setSelectedHistoryId] = useState(null);
 
   const steps = useMemo(() => buildStepsForAlgorithm(algorithm, initialArray), [algorithm, initialArray]);
   const currentStep = steps[stepIndex] || { array: initialArray, type: "idle", message: "Ready." };
@@ -235,6 +239,12 @@ function SortingVisualizer({ pagePhase = "idle" }) {
     [steps, stepIndex]
   );
 
+  const saveSnapshot = (label) => {
+    const item = { id: Date.now(), label, snapshot: `[${currentStep.array.join(", ")}]` };
+    setHistory((prev) => [item, ...prev].slice(0, 14));
+    setSelectedHistoryId(item.id);
+  };
+
   const handleAlgorithmChange = (nextAlgorithm) => {
     setAlgorithm(nextAlgorithm);
     setStepIndex(0);
@@ -247,6 +257,7 @@ function SortingVisualizer({ pagePhase = "idle" }) {
   };
 
   const handleShuffle = () => {
+    saveSnapshot(`shuffle/${algorithm}`);
     setInitialArray(makeRandomArray(initialArray.length));
     setStepIndex(0);
     setIsPlaying(false);
@@ -278,6 +289,13 @@ function SortingVisualizer({ pagePhase = "idle" }) {
   }, [isPlaying, stepIndex, steps.length, speed]);
 
   const sortedIndices = currentStep.type === "done" ? currentStep.array.map((_, index) => index) : [];
+
+  useEffect(() => {
+    if (currentStep.type !== "done") return;
+    api.postAlgorithm({ algorithm, inputSize: initialArray.length, numberOfSteps: steps.length, executionTime: stepIndex * speed }).catch(() => {});
+    api.postSession({ visualization: "sorting", algorithm, stepCount: steps.length }).catch(() => {});
+    api.postAnalytics({ algorithm, inputSize: initialArray.length, stepCount: steps.length }).catch(() => {});
+  }, [currentStep.type, algorithm, initialArray.length, steps.length, stepIndex, speed]);
 
   return (
     <div className={`sorting-page sorting-page-phase-${pagePhase}`}>
@@ -312,6 +330,7 @@ function SortingVisualizer({ pagePhase = "idle" }) {
         currentStepType={currentStep.type}
       />
 
+      <section className="dashboard-grid stage-block stage-delay-4 sorting-learning-grid">
       <SortingLearningPanel
         algorithm={algorithm}
         stepIndex={stepIndex}
@@ -320,6 +339,17 @@ function SortingVisualizer({ pagePhase = "idle" }) {
         comparedCount={comparedCount}
         swapCount={swapCount}
       />
+      <HistoryPanel
+        title="HISTORY PANEL"
+        items={history}
+        selectedId={selectedHistoryId}
+        onSelect={(item) => {
+          setSelectedHistoryId(item.id);
+          setIsPlaying(false);
+          setStepIndex(0);
+        }}
+      />
+      </section>
     </div>
   );
 }

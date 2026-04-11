@@ -7,8 +7,8 @@
   width: 100%;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(7, 12, 28, 0.9);
-  color: #e9f2ff;
+  background: rgba(0, 0, 0, 0.86);
+  color: rgba(255, 255, 255, 0.92);
   padding: 10px 11px;
   font-size: 0.78rem;
   letter-spacing: 0.08em;
@@ -32,10 +32,10 @@
 
 .sorting-stage-wrap {
   min-height: 320px;
-  border: 1px solid rgba(77, 154, 255, 0.32);
+  border: 1px solid rgba(255, 44, 143, 0.28);
   border-radius: 14px;
   padding: 16px;
-  background: linear-gradient(180deg, rgba(8, 16, 40, 0.9), rgba(3, 8, 24, 0.95));
+  background: linear-gradient(180deg, rgba(255, 44, 143, 0.08), rgba(0, 0, 0, 0.9));
   display: flex;
   align-items: flex-end;
   gap: 10px;
@@ -47,7 +47,7 @@
   min-height: 280px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(6, 13, 31, 0.88);
+  background: rgba(0, 0, 0, 0.72);
   position: relative;
   display: flex;
   align-items: flex-end;
@@ -70,8 +70,8 @@
 .sorting-bar {
   width: 100%;
   border-radius: 6px 6px 3px 3px;
-  background: linear-gradient(180deg, rgba(65, 200, 255, 0.95), rgba(43, 112, 255, 0.85));
-  box-shadow: 0 0 16px rgba(65, 200, 255, 0.45);
+  background: linear-gradient(180deg, rgba(255, 44, 143, 0.9), rgba(168, 85, 247, 0.82));
+  box-shadow: 0 0 16px rgba(255, 44, 143, 0.35);
   transition: height 220ms ease;
 }
 
@@ -83,8 +83,8 @@
 }
 
 .sorting-bar-shell.is-compared {
-  border-color: rgba(255, 210, 74, 0.95);
-  box-shadow: 0 0 20px rgba(255, 210, 74, 0.3);
+  border-color: rgba(255, 44, 143, 0.95);
+  box-shadow: 0 0 20px rgba(255, 44, 143, 0.3);
 }
 
 .sorting-bar-shell.is-swapped {
@@ -94,18 +94,18 @@
 }
 
 .sorting-bar-shell.is-pivot {
-  border-color: rgba(136, 84, 255, 0.95);
-  box-shadow: 0 0 22px rgba(136, 84, 255, 0.34);
+  border-color: rgba(168, 85, 247, 0.95);
+  box-shadow: 0 0 22px rgba(168, 85, 247, 0.32);
 }
 
 .sorting-bar-shell.is-sorted,
 .sorting-bar-shell.is-final {
-  border-color: rgba(64, 255, 198, 0.95);
+  border-color: rgba(255, 255, 255, 0.82);
 }
 
 .sorting-learning-grid .sorting-note {
   margin: 10px 0 0;
-  color: rgba(217, 230, 255, 0.87);
+  color: rgba(255, 255, 255, 0.84);
   font-size: 0.76rem;
   line-height: 1.55;
 }

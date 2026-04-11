@@ -1,9 +1,16 @@
 .sorting-page {
   display: grid;
-  gap: 18px;
+  gap: 24px;
 }
 
-.sorting-controls-panel select {
+.sorting-page .control-panel,
+.sorting-page .visual-panel,
+.sorting-page .info-card {
+  padding: 20px;
+}
+
+.sorting-controls-panel select,
+.algo-control-select {
   width: 100%;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.22);
@@ -15,19 +22,16 @@
   text-transform: uppercase;
 }
 
-.sorting-controls-grid {
+.sorting-controls-grid,
+.algo-debug-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
+  gap: 16px;
   align-items: end;
 }
 
 .sorting-controls-grid .field {
   grid-column: span 2;
-}
-
-.sorting-stage-panel {
-  overflow: hidden;
 }
 
 .sorting-stage-wrap {
@@ -49,22 +53,20 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(0, 0, 0, 0.72);
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 8px;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 1;
+  padding: 10px;
   overflow: hidden;
   transition: transform 200ms ease, box-shadow 240ms ease, border-color 200ms ease;
 }
 
-.sorting-bar-grid {
+.sorting-card-shell::before {
+  content: "";
   position: absolute;
   inset: 6px;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 12px 12px;
-  opacity: 0.4;
+  border: 1px dashed var(--white-faint);
+  opacity: 0.5;
 }
 
 .sorting-bar {
@@ -112,7 +114,7 @@
 
 .sorting-note-message {
   margin-top: 12px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  border-top: 1px dashed var(--white-faint);
   padding-top: 10px;
 }
 
@@ -121,20 +123,37 @@
   gap: 8px;
 }
 
+.algo-stage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 16px;
+}
+
+.algo-grid-cells {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.algo-grid-cell {
+  height: 22px;
+  border: 1px solid var(--white-faint);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.algo-grid-cell.is-active {
+  border-color: var(--pink-main);
+  background: var(--pink-faint);
+  box-shadow: 0 0 10px var(--pink-soft);
+}
+
 @media (max-width: 980px) {
-  .sorting-controls-grid {
+  .sorting-controls-grid,
+  .algo-debug-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .sorting-controls-grid .field {
     grid-column: span 2;
-  }
-
-  .sorting-stage-wrap {
-    overflow-x: auto;
-  }
-
-  .sorting-bar-shell {
-    min-width: 64px;
   }
 }

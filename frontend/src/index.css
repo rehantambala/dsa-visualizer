@@ -14,6 +14,13 @@
   --bg: #000000;
   --white: #ffffff;
   --pink: #ff2c8f;
+  --pink-strong: rgba(255, 44, 143, 0.95);
+  --pink-main: rgba(255, 44, 143, 0.82);
+  --pink-soft: rgba(255, 44, 143, 0.45);
+  --pink-faint: rgba(255, 44, 143, 0.18);
+  --white-main: rgba(255, 255, 255, 0.95);
+  --white-soft: rgba(255, 255, 255, 0.78);
+  --white-faint: rgba(255, 255, 255, 0.2);
   --danger: #ff4d8d;
   --line: rgba(255, 255, 255, 0.14);
   --panel: rgba(255, 255, 255, 0.03);

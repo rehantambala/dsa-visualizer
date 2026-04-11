@@ -81,3 +81,9 @@ dsa-visualizer/
 
 ![Array Visualizer](./screenshots/Array.png)
 ![Stack Visualizer](./screenshots/Stack.png)
+
+## Deployment Notes (Milestone 11)
+
+- **Frontend (Vercel):** Deploy `frontend/` and set `VITE_API_BASE_URL` to the Render backend URL.
+- **Backend (Render):** Use `render.yaml` from repo root. The backend exposes `/api/algorithms`, `/api/sessions`, and `/api/analytics`.
+- **MongoDB Atlas migration:** provision a cluster and set `MONGODB_URI` in Render environment variables. Current server is in-memory and ready to swap to Atlas persistence in `backend/src/server.js`.

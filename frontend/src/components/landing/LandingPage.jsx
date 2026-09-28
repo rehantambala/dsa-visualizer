@@ -276,6 +276,13 @@ function LandingPage({ onEnter, auth }) {
   // replay a completed animation.
   const [burst, setBurst] = useState(null);
   const scanFragments = [0, 1, 2, 3, 4, 5];
+  // Auth gate: entering any module requires a signed-in session. When a guest
+  // clicks a card, we remember which one they wanted instead of navigating,
+  // and open the auth modal on top of the landing page. Once auth.isLoggedIn
+  // flips true (login, register, or Google - all go through the same
+  // useAuth state) the effect below finishes the interrupted navigation
+  // automatically, so the user doesn't have to click the card a second time.
+  const [pendingDestination, setPendingDestination] = useState(null);
 
   // Cursor-driven parallax on the background glow/noise/grid/particle layers
   // only (never on content) - gives the hero actual depth instead of a flat
@@ -357,6 +364,13 @@ function LandingPage({ onEnter, auth }) {
   }, []);
 
   const handleEnter = (key, event) => {
+    if (!auth.isLoggedIn) {
+      sounds.click();
+      setPendingDestination(key);
+      setAuthModalOpen(true);
+      return;
+    }
+
     const x = event?.clientX ?? window.innerWidth / 2;
     const y = event?.clientY ?? window.innerHeight / 2;
     setBurst({ x, y, key: Date.now() });
@@ -365,6 +379,19 @@ function LandingPage({ onEnter, auth }) {
     // one continuous motion instead of an instant cut.
     setTimeout(() => onEnter(key), 260);
   };
+
+  // Resumes the module entry a guest was blocked from above, right after they
+  // finish signing in through the modal.
+  useEffect(() => {
+    if (!auth.isLoggedIn || !pendingDestination) return;
+    const key = pendingDestination;
+    setPendingDestination(null);
+    setAuthModalOpen(false);
+    setBurst({ x: window.innerWidth / 2, y: window.innerHeight / 2, key: Date.now() });
+    sounds.navChange();
+    setTimeout(() => onEnter(key), 260);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.isLoggedIn, pendingDestination]);
 
   return (
     <div className="landing-page" ref={pageRef} onMouseMove={handlePageMouseMove}>
@@ -408,7 +435,14 @@ function LandingPage({ onEnter, auth }) {
         )}
       </div>
 
-      {authModalOpen && <AuthModal auth={auth} onClose={() => setAuthModalOpen(false)} />}
+      {authModalOpen && (
+        <AuthModal
+          auth={auth}
+          onClose={() => setAuthModalOpen(false)}
+          onCancel={() => setPendingDestination(null)}
+          hint={pendingDestination ? 'Sign in to enter this module - your progress and saves stay tied to your account.' : undefined}
+        />
+      )}
 
       <header className="landing-hero">
         <BootSequence />

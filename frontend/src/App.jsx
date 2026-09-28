@@ -368,6 +368,16 @@ function App() {
     };
   }, []);
 
+  // Every module is gated behind login (see LandingPage.jsx's handleEnter) -
+  // if the session ends while inside the app (logout, or an expired cookie
+  // caught by useAuth's own checks), send the user back to the landing page's
+  // gate instead of leaving them stranded inside a module with no account.
+  useEffect(() => {
+    if (view === "app" && !auth.isLoggedIn) {
+      setView("landing");
+    }
+  }, [auth.isLoggedIn, view]);
+
   const scanFragments = Array.from({ length: 20 }, (_, indexValue) => indexValue);
 
   const renderArrayPage = () => (

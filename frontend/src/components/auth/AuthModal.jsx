@@ -10,7 +10,7 @@ import GoogleSignInButton from './GoogleSignInButton.jsx';
 import { sounds } from '../utils/audioEngine.js';
 import './auth.css';
 
-function AuthModal({ auth, onClose }) {
+function AuthModal({ auth, onClose, onCancel, hint }) {
   const [mode, setMode] = useState('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -37,17 +37,29 @@ function AuthModal({ auth, onClose }) {
     }
   };
 
+  // Backing out (backdrop click or the × button) is different from the modal
+  // closing itself after a successful login/register: a caller that's using
+  // this modal to gate access to something (see LandingPage.jsx) needs to
+  // know "the user gave up" separately from "auth succeeded, hide the modal" -
+  // otherwise a plain onClose fired from handleSubmit/handleGoogleCredential
+  // below would race the caller's own "resume what I was doing" effect and
+  // wipe out its state before that effect ever sees it.
+  const handleDismiss = () => {
+    onCancel?.();
+    onClose();
+  };
+
   return (
-    <div className="auth-overlay" onClick={onClose}>
+    <div className="auth-overlay" onClick={handleDismiss}>
       <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
         <div className="auth-modal-header">
           <div className="panel-title">{mode === 'login' ? 'LOG IN' : 'CREATE ACCOUNT'}</div>
-          <button type="button" className="auth-close" onClick={onClose} aria-label="Close">×</button>
+          <button type="button" className="auth-close" onClick={handleDismiss} aria-label="Close">×</button>
         </div>
 
         <p className="auth-modal-hint">
           {mode === 'login'
-            ? 'Log in to keep your Linked List saves private to your account.'
+            ? hint || 'Log in to keep your Linked List saves private to your account.'
             : 'Pick a username and password - takes ten seconds, no email needed.'}
         </p>
 

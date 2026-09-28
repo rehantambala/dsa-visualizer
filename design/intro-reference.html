@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DSA_VISUALIZER · intro reference v2</title>
+<title>DSA_VISUALIZER · intro reference v3</title>
 <!--
-  REFERENCE DESIGN v2 for the intro + login screen. Reproduce this EXACTLY in React.
+  REFERENCE DESIGN v3 for the intro + login screen + ENTRY TRANSITION. Reproduce this EXACTLY in React.
   Identity: app's existing pink rgb(255,44,143), white, black, Courier New stack, dot grid, square corners. No webfonts.
   Pieces:
    1. #field canvas: the dot grid is a live pathfinding grid. BFS floods from the logo to the cursor
@@ -14,7 +14,13 @@
    3. Title decodes: each char scrambles through glyphs, then settles, left to right.
    4. Panel: typing pushes cells onto a STACK strip (password = pink masked cells).
    5. Submit: cells scramble into hex (visual only), then result line:
-      success → "✔ PATH FOUND · ACCESS GRANTED" + full-screen flood; failure → "✖ 401 · NO PATH FOUND".
+      success → "✔ PATH FOUND · ACCESS GRANTED" → ENTRY TRANSITION (6); failure → "✖ 401 · NO PATH FOUND".
+   6. ENTRY TRANSITION "COLLAPSE → TRAVERSE" (~2.3s, no flash):
+      a. UI collapses like a terminal powering off (scaleY to a pink line, then to nothing).
+      b. Background runs BFS in REVERSE: a pink ring contracts from the screen edges into the logo.
+      c. The logo compresses into one glowing pink pixel (the singularity), holds a beat.
+      d. The landing page is traversed into existence: a BFS flood from that pixel reveals it cell by cell
+         (28px cells, pink frontier), while the pixel flies to the top-left and becomes the navbar logo.
   prefers-reduced-motion: no canvas animation, no scramble, end states immediately.
 -->
 <style>
@@ -29,7 +35,38 @@ body{background:var(--bg);color:var(--fg);font-family:var(--font);overflow-x:hid
   background-image:radial-gradient(var(--line) 1px,transparent 1px),radial-gradient(circle at 50% 30%,rgba(255,44,143,.12),transparent 55%);
   background-size:28px 28px,100% 100%;background-position:-14px -14px,0 0}
 #field{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
-#flash{position:fixed;inset:0;background:var(--pink);opacity:0;pointer-events:none;z-index:3;transition:opacity .5s}
+#portal{position:fixed;inset:0;width:100%;height:100%;z-index:6;pointer-events:none;display:none}
+#sing{position:fixed;z-index:7;width:8px;height:8px;background:var(--pink);pointer-events:none;display:none;
+  box-shadow:0 0 12px 3px rgba(255,44,143,.8),0 0 40px 10px rgba(255,44,143,.35);
+  transition:left .75s cubic-bezier(.2,.8,.2,1),top .75s cubic-bezier(.2,.8,.2,1),width .75s cubic-bezier(.2,.8,.2,1),height .75s cubic-bezier(.2,.8,.2,1),opacity .25s}
+.ui{display:flex;flex-direction:column;align-items:center;gap:20px;width:100%}
+.crt-off{animation:crt .52s cubic-bezier(.6,0,.9,.4) forwards}
+@keyframes crt{0%{transform:none;opacity:1}55%{transform:scaleY(.006);opacity:1;filter:brightness(2.2)}100%{transform:scale(0,.006);opacity:0}}
+.mark.collapse svg{animation:collapse .45s cubic-bezier(.7,0,.9,.5) forwards}
+@keyframes collapse{to{transform:scale(.05);filter:drop-shadow(0 0 22px rgba(255,44,143,1)) brightness(2)}}
+.wrap.gone{visibility:hidden}
+/* landing placeholder (your real landing page renders here) */
+.landing{position:fixed;inset:0;z-index:2;display:none;flex-direction:column;overflow:auto;
+  background-image:radial-gradient(var(--line) 1px,transparent 1px),radial-gradient(circle at 50% 40%,rgba(255,44,143,.10),transparent 55%);
+  background-size:28px 28px,100% 100%;background-position:-14px -14px,0 0;background-color:#000}
+.lbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;color:var(--fg);text-decoration:none}
+.brand svg{width:28px;height:28px;display:block;filter:drop-shadow(0 0 6px rgba(255,44,143,.45));opacity:0;transition:opacity .25s}
+.brand.on svg{opacity:1}
+.word{font-weight:700;font-size:16px;letter-spacing:.06em;white-space:nowrap}
+.word i{font-style:normal;color:var(--pink)}
+.who{font-size:12px;color:var(--muted);letter-spacing:.06em}
+.who b{color:var(--pink);font-weight:400}
+.lhero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:40px 16px;text-align:center}
+.boot{margin:0;border:1px solid var(--line);padding:16px 20px;text-align:left;font:inherit;font-size:12px;line-height:1.9;color:var(--muted);letter-spacing:.06em}
+.boot b{color:var(--pink);font-weight:400}
+.ctas{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.cta{all:unset;cursor:pointer;border:1px solid var(--line);padding:14px 22px;letter-spacing:.1em;font-size:14px}
+.cta.primary{border-color:var(--pink);background:rgba(255,44,143,.08)}
+.cta:hover,.cta:focus-visible{border-color:var(--pink);box-shadow:0 0 14px rgba(255,44,143,.35)}
+.note{font-size:11px;color:var(--muted);letter-spacing:.1em;margin:0}
+@media (max-width:600px){.word .full{display:none}}
+@media (min-width:601px){.word .short{display:none}}
 .wrap{position:relative;z-index:1;min-height:100%;display:grid;place-items:center;padding-block:48px;padding-inline:16px}
 .stage{display:flex;flex-direction:column;align-items:center;gap:20px;text-align:center;width:100%;max-width:440px}
 .mark svg{width:clamp(96px,22vw,168px);height:auto;display:block;filter:drop-shadow(0 0 16px rgba(255,44,143,.45))}
@@ -89,10 +126,27 @@ body{background:var(--bg);color:var(--fg);font-family:var(--font);overflow-x:hid
 </head>
 <body>
 <canvas id="field" aria-hidden="true"></canvas>
-<div id="flash" aria-hidden="true"></div>
+<canvas id="portal" aria-hidden="true"></canvas>
+<div id="sing" aria-hidden="true"></div>
+<section class="landing" id="landing" aria-label="Landing page">
+  <header class="lbar">
+    <a class="brand" id="brand" href="#"><span id="brandMark"></span><span class="word"><span class="full">DSA<i>_</i>VISUALIZER</span><span class="short">DSA<i>_</i>VIS</span></span></a>
+    <span class="who"><b>›</b> session · <span id="who">user</span></span>
+  </header>
+  <div class="lhero">
+    <pre class="boot">&gt; DSA_VISUALIZER — SYSTEM BOOT
+&gt; LOADING 9 MODULES ... OK
+&gt; CORE MEMORY LINK (MONGODB) ... OK
+<b>&gt; READY.</b></pre>
+    <div class="ctas"><button class="cta primary" type="button">▶ ENTER LAB</button><button class="cta" type="button">VIEW LIVE ANALYTICS</button></div>
+    <p class="note">placeholder · your real landing page renders here</p>
+    <button class="cta" type="button" id="replay">↺ REPLAY DEMO</button>
+  </div>
+</section>
 <div class="wrap">
 <main class="stage">
   <div class="mark" id="mark"></div>
+  <div class="ui" id="ui">
   <h1 class="title" id="title" aria-label="DSA_VISUALIZER"></h1>
   <p class="tag" id="tag">Nine modules. Real algorithms, step by step.</p>
   <p class="hint" id="hint">move your cursor · <b>the grid is solving for it</b></p>
@@ -110,6 +164,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--font);overflow-x:hid
     <div class="or">OR</div>
     <div class="google">Google button: theme filled_black · rectangular · large · continue_with · full width</div>
   </form>
+  </div>
   <p class="demo">Reference demo: leave a field empty to see the error state. Fill both to see success.</p>
 </main>
 </div>
@@ -211,7 +266,12 @@ const field=(()=>{
   }
   function draw(now){
     ctx.clearRect(0,0,innerWidth,innerHeight);
-    if(anim){
+    if(anim&&anim.implode){
+      const e=now-anim.t0,r=anim.maxD*(1-Math.min(1,e/anim.dur));
+      for(const c of anim.order){const d=anim.dist[c];const band=d-r;if(band<0||band>5)continue;
+        const a=.6*(1-band/5);ctx.fillStyle=`rgba(255,44,143,${a})`;ctx.fillRect((c%cols)*G-SQ/2,(c/cols|0)*G-SQ/2,SQ,SQ)}
+      if(e>anim.dur)anim=null;
+    }else if(anim){
       const e=now-anim.t0,r=e*anim.speed;
       for(const c of anim.order){const d=anim.dist[c];if(d>r)break;
         const age=r-d,a=anim.full?Math.min(.5,anim.alpha+age*.01):anim.alpha*Math.max(0,1-age/22);if(a<=.004)continue;
@@ -235,7 +295,9 @@ const field=(()=>{
     requestAnimationFrame(draw);
   }
   return{solve,pulse(){if(reduce)return;const b=mark.getBoundingClientRect();solve(b.left+b.width/2+G*9,b.bottom+G*4,{force:true,speed:.035})},
-    flood(){if(reduce)return;solve(0,0,{full:true,speed:.09,alpha:.12,force:true})},clear(){anim=null}};
+    flood(){if(reduce)return;solve(0,0,{full:true,speed:.09,alpha:.12,force:true})},clear(){anim=null},
+    implode(dur){if(reduce)return;const r=bfs(src,null);anim={...r,implode:true,dur,t0:performance.now()}},
+    get src(){return src}};
 })();
 
 if(matchMedia('(pointer: coarse)').matches)hint.innerHTML='<b>the grid is solving</b> · watch the background';
@@ -277,10 +339,10 @@ auth.addEventListener('submit',async e=>{
   // ---- In React: replace this block with the real API call ----
   const ok=u.value.trim()&&pw.value;
   if(ok){
-    log.className='log good';log.innerHTML='<b>✔</b> PATH FOUND · ACCESS GRANTED';auth.classList.add('ok');field.flood();
-    await wait(1100);document.getElementById('flash').style.opacity=.9;await wait(450);
-    log.innerHTML='<b>›</b> entering the lab…';document.getElementById('flash').style.opacity=0;
-    await wait(1600);field.clear();auth.classList.remove('ok');log.textContent='';u.value='';pw.value='';paint();   // demo reset
+    log.className='log good';log.innerHTML='<b>✔</b> PATH FOUND · ACCESS GRANTED';auth.classList.add('ok');
+    document.getElementById('who').textContent=u.value.trim();
+    await wait(650);
+    await enterLab();
   }else{
     log.className='log err';log.textContent='✖ 401 · NO PATH FOUND · wrong username or password';
     auth.animate?.([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:260});
@@ -288,6 +350,69 @@ auth.addEventListener('submit',async e=>{
   }
   go.textContent=mode==='login'?'RUN · LOG IN':'RUN · CREATE ACCOUNT';go.disabled=false;busy=false;
 });
+/* ================= 6. ENTRY TRANSITION: COLLAPSE → TRAVERSE ================= */
+const L16=[];for(let y=2;y<=13;y++)L16.push([2+Math.floor((y-2)/2),y]);
+const P16=L16.concat(L16.slice().reverse().map(([x,y])=>[15-x,y]));
+const W16=[[5,3,6,1],[7,6,2,4],[0,6,1,5],[15,6,1,5],[11,14,5,1]];
+document.getElementById('brandMark').innerHTML=`<svg viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${
+  W16.map(r=>`<rect x="${r[0]}" y="${r[1]}" width="${r[2]}" height="${r[3]}" fill="${WALL}"/>`).join('')+
+  P16.map(([x,y])=>`<rect x="${x}" y="${y}" width="1" height="1" fill="${PINK}"/>`).join('')+
+  `<rect x="1" y="0" width="2" height="2" fill="${FG}"/><rect x="13" y="0" width="2" height="2" fill="${FG}"/>`}</svg>`;
+
+const frame=()=>new Promise(r=>requestAnimationFrame(r));
+function traverseReveal(cx,cy,dur){return new Promise(res=>{
+  const cv=document.getElementById('portal'),ctx=cv.getContext('2d'),G=28;
+  const dpr=Math.min(devicePixelRatio||1,2);cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);cv.style.display='block';
+  const cols=Math.ceil(innerWidth/G),rows=Math.ceil(innerHeight/G),n=cols*rows;
+  let seed=11;const rnd=()=>((seed=Math.imul(seed^seed>>>15,seed|1)+0x6D2B79F5|0)>>>0)/4294967296;
+  const walls=new Uint8Array(n);for(let i=0;i<n;i++)walls[i]=rnd()<.1?1:0;
+  const s0=Math.min(rows-1,Math.max(0,Math.floor(cy/G)))*cols+Math.min(cols-1,Math.max(0,Math.floor(cx/G)));walls[s0]=0;
+  const dist=new Int16Array(n).fill(-1),q=new Int32Array(n);let h=0,t=0;dist[s0]=0;q[t++]=s0;const order=[];
+  while(h<t){const c=q[h++];order.push(c);const x=c%cols,y=c/cols|0;
+    for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=cols||ny>=rows)continue;const k=ny*cols+nx;
+      if(dist[k]<0&&!walls[k]){dist[k]=dist[c]+1;q[t++]=k}}}
+  const maxD=dist[order[order.length-1]]+3,t0=performance.now();
+  const draw=now=>{const p=Math.min(1,(now-t0)/dur),r=maxD*(1-Math.pow(1-p,2.2));
+    ctx.fillStyle='#000';ctx.fillRect(0,0,innerWidth,innerHeight);
+    for(const c of order){const d=dist[c];if(d>r)break;const x=(c%cols)*G,y=(c/cols|0)*G;ctx.clearRect(x,y,G,G);
+      const b=r-d;if(b<3){ctx.fillStyle=`rgba(255,44,143,${.55*(1-b/3)})`;ctx.fillRect(x+2,y+2,G-4,G-4)}}
+    if(p>=1){ // leftover wall cells dissolve
+      cv.animate([{opacity:1},{opacity:0}],{duration:260,fill:'forwards'}).finished.then(()=>{cv.style.display='none';cv.getAnimations().forEach(a=>a.cancel());res()});return}
+    requestAnimationFrame(draw)};
+  requestAnimationFrame(draw);
+})}
+
+async function enterLab(){
+  const wrap=document.querySelector('.wrap'),ui=document.getElementById('ui'),landing=document.getElementById('landing'),
+        sing=document.getElementById('sing'),brand=document.getElementById('brand');
+  if(reduce){wrap.classList.add('gone');field.clear();landing.style.display='flex';brand.classList.add('on');return}
+  // a. terminal powers off
+  ui.classList.add('crt-off');
+  // b. reverse BFS: ring contracts into the logo
+  field.implode(900);
+  await wait(420);
+  // c. logo compresses into a single pixel
+  mark.classList.add('collapse');
+  await wait(470);
+  const b=mark.getBoundingClientRect(),cx=b.left+b.width/2,cy=b.top+b.height/2;
+  Object.assign(sing.style,{display:'block',left:cx-4+'px',top:cy-4+'px',width:'8px',height:'8px',opacity:1});
+  wrap.classList.add('gone');
+  sing.animate([{transform:'scale(1)'},{transform:'scale(1.8)'},{transform:'scale(1)'}],{duration:320,easing:'ease-out'});
+  await wait(380);
+  field.clear();
+  // d. traverse the landing into existence while the pixel becomes the navbar logo
+  landing.style.display='flex';
+  const reveal=traverseReveal(cx,cy,1050);
+  await frame();
+  const t=brand.querySelector('svg').getBoundingClientRect();
+  Object.assign(sing.style,{left:t.left+'px',top:t.top+'px',width:t.width+'px',height:t.height+'px'});
+  await wait(760);
+  brand.classList.add('on');sing.style.opacity=0;
+  await reveal;
+  sing.style.display='none';
+}
+document.getElementById('replay').addEventListener('click',()=>location.reload());
+
 /* network failure copy for React: "✖ NO ROUTE TO SERVER · is the backend running?" */
 </script>
 </body>

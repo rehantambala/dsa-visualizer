@@ -91,6 +91,16 @@ function App() {
     }
   }, [auth.isLoggedIn, view]);
 
+  // The nav is a single horizontally-scrolling row; keep the active tab in
+  // view (centred) whenever the module changes.
+  useEffect(() => {
+    if (view !== "app") return;
+    const active = document.querySelector(".nav-link.active");
+    const nav = active?.parentElement;
+    if (!active || !nav) return;
+    nav.scrollTo({ left: active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2 });
+  }, [mode, view]);
+
   const scanFragments = Array.from({ length: 20 }, (_, indexValue) => indexValue);
 
   const renderActivePage = () => {

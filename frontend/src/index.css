@@ -279,23 +279,43 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
 }
 
 .brand {
   font-size: 1rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
+/* One row, always. If the tabs don't fit they scroll sideways instead of
+   wrapping (the scrollbar is hidden; the active tab is scrolled into view
+   from App.jsx). */
 .nav {
+  position: relative;
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding: 4px 6px; /* room for the active tab's glow so it isn't clipped */
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-link {
   background: transparent;
   color: rgba(255, 255, 255, 0.7);
   border: 1px solid transparent;
-  padding: 10px 14px;
+  padding: 10px 8px;
+  min-height: 44px;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
   transition: 180ms ease;
 }
@@ -310,10 +330,15 @@ button:disabled {
 .auth-slot {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   gap: 10px;
 }
 
 .auth-username {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.76rem;
   color: rgba(255, 255, 255, 0.7);
   letter-spacing: 0.03em;
@@ -322,6 +347,41 @@ button:disabled {
 .auth-btn {
   padding: 8px 14px;
   font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+/* Below ~1360px nine tabs + logo + user controls can't share a row: logo and
+   user controls stay on top, the tab bar takes its own full-width row. */
+@media (max-width: 1360px) {
+  .topbar {
+    flex-wrap: wrap;
+    padding-top: 20px;
+    row-gap: 8px;
+  }
+
+  .brand {
+    order: 1;
+  }
+
+  .auth-slot {
+    order: 2;
+  }
+
+  .nav {
+    order: 3;
+    flex: 1 0 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .topbar {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .auth-username {
+    display: none;
+  }
 }
 
 .page {
@@ -2870,12 +2930,6 @@ button:disabled {
 }
 
 @media (max-width: 720px) {
-  .topbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
   .stack-meta-column {
     grid-template-columns: 1fr 1fr;
   }

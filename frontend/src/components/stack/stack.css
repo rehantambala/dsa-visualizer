@@ -29,7 +29,7 @@
   padding: 9px 10px;
   font-size: 0.62rem;
   letter-spacing: 0.12em;
-  box-shadow: inset 0 0 0 1px rgba(255, 44, 143, 0.08);
+  box-shadow: inset 0 0 0 1px rgb(var(--pink-rgb) / 0.08);
 }
 
 .stack-page .stack-meta-box {
@@ -65,7 +65,7 @@
 }
 
 .stack-page .stack-node-row {
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .stack-page .stack-node-row.is-top-row {
@@ -75,7 +75,7 @@
 .stack-page .stack-node-rail {
   width: 18px;
   height: 2px;
-  box-shadow: 0 0 8px rgba(255, 44, 143, 0.12);
+  box-shadow: 0 0 8px rgb(var(--pink-rgb) / 0.12);
 }
 
 .stack-page .stack-node-label {
@@ -89,8 +89,8 @@
   width: 128px;
   min-height: 124px;
   padding: 9px;
-  border-color: rgba(255, 255, 255, 0.14);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  border-color: rgb(var(--white-rgb) / 0.14);
+  box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.02);
 }
 
 .stack-page .stack-node-row > .pixel-block .pixel-grid {
@@ -147,22 +147,22 @@
 .stack-page .stack-node-row > .pixel-block.is-active {
   transform: translateY(-5px) scale(1.02);
   box-shadow:
-    0 0 18px rgba(255, 44, 143, 0.16),
-    inset 0 0 16px rgba(255, 44, 143, 0.08);
+    0 0 18px rgb(var(--pink-rgb) / 0.16),
+    inset 0 0 16px rgb(var(--pink-rgb) / 0.08);
 }
 
 .stack-page .stack-node-row.is-top-row > .pixel-block.is-active {
-  border-color: rgba(255, 44, 143, 0.86);
+  border-color: rgb(var(--pink-rgb) / 0.86);
   box-shadow:
-    0 0 20px rgba(255, 44, 143, 0.18),
-    0 0 30px rgba(255, 44, 143, 0.08),
-    inset 0 0 14px rgba(255, 44, 143, 0.08);
+    0 0 20px rgb(var(--pink-rgb) / 0.18),
+    0 0 30px rgb(var(--pink-rgb) / 0.08),
+    inset 0 0 14px rgb(var(--pink-rgb) / 0.08);
 }
 
 .stack-page .stack-node-row > .pixel-block.is-animated {
   box-shadow:
-    0 0 16px rgba(255, 44, 143, 0.1),
-    inset 0 0 14px rgba(255, 44, 143, 0.06);
+    0 0 16px rgb(var(--pink-rgb) / 0.1),
+    inset 0 0 14px rgb(var(--pink-rgb) / 0.06);
 }
 
 .stack-page .stack-node-row > .pixel-block.is-insert {
@@ -202,7 +202,7 @@
   right: 28px;
   bottom: 18px;
   height: 3px;
-  box-shadow: 0 0 10px rgba(255, 44, 143, 0.12);
+  box-shadow: 0 0 10px rgb(var(--pink-rgb) / 0.12);
 }
 
 .stack-page .stack-message-box {
@@ -241,13 +241,13 @@
 }
 
 .stack-page .stack-card .panel-title {
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 @media (max-width: 860px) {
   .stack-page .stack-stage-wrap {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: var(--space-4);
   }
 
   .stack-page .stack-meta-column {
@@ -282,7 +282,7 @@
   .stack-page .stack-node-row > .pixel-block {
     width: 118px;
     min-height: 116px;
-    padding: 8px;
+    padding: var(--space-2);
   }
 
   .stack-page .stack-node-row > .pixel-block .pixel-value-matrix {

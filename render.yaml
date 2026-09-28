@@ -3,7 +3,7 @@ services:
     name: pixelds-backend
     env: node
     rootDir: backend
-    buildCommand: npm ci
+    buildCommand: corepack enable && pnpm install --frozen-lockfile
     startCommand: npm start
     envVars:
       - key: MONGO_URI

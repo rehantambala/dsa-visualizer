@@ -183,7 +183,7 @@ function GraphVisualizer() {
         <HistoryPanel
           title="RUN HISTORY"
           items={history}
-          onSelect={(item) => {
+          onSelect={() => {
             debuggerState.reset();
             setSteps([IDLE_STEP]);
           }}

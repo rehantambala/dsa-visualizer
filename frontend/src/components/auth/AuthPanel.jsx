@@ -44,16 +44,19 @@ function stackItems(username, password) {
   return items;
 }
 
-// Number of children the strip renders - the reference only replays the
-// "push" animation when this grows, so deleting never re-animates.
-function stripChildren(items) {
-  if (!items.length) return 1;
-  return Math.min(items.length, MAXC) + (items.length > MAXC ? 1 : 0);
+// Index of the cell a keystroke just pushed (the first position that differs),
+// so only that cell plays the push animation - not the whole strip.
+function pushedIndex(prev, next) {
+  let idx = next.findIndex((it, i) => !prev[i] || it.c !== prev[i].c || !it.m !== !prev[i].m || !it.sep !== !prev[i].sep);
+  // the first password character also adds the separator; the new cell is the masked one
+  if (idx < 0 || next[idx].sep) idx = next.length - 1;
+  return idx;
 }
 
 function errorLine(err, method) {
   if (!err || err.kind === 'network') return '✖ NO ROUTE TO SERVER · is the backend running?';
   if (err.kind === 'unauthorized' && method === 'login') return '✖ 401 · NO PATH FOUND · wrong username or password';
+  if (method === 'register' && err.status === 409) return '✖ 409 · USERNAME TAKEN · pick another';
   return `✖ ${err.status} · ${err.message}`;
 }
 
@@ -68,7 +71,7 @@ const AuthPanel = forwardRef(function AuthPanel(
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState(false);
   const [log, setLog] = useState({ kind: '', text: '' });
-  const [strip, setStrip] = useState({ gen: 0, animate: false });
+  const [push, setPush] = useState({ index: -1, gen: 0 });
   const [scrambling, setScrambling] = useState(false);
   const [, setTick] = useState(0);
   const formRef = useRef(null);
@@ -91,8 +94,10 @@ const AuthPanel = forwardRef(function AuthPanel(
   const hidden = items.length - visible.length;
 
   const updateFields = (nextUser, nextPw) => {
-    const grew = stripChildren(stackItems(nextUser, nextPw)) > stripChildren(items);
-    setStrip((s) => (grew && !reduceMotion() ? { gen: s.gen + 1, animate: true } : { gen: s.gen, animate: false }));
+    const next = stackItems(nextUser, nextPw);
+    setPush((p) => (next.length > items.length && !reduceMotion()
+      ? { index: pushedIndex(items, next), gen: p.gen + 1 }
+      : { ...p, index: -1 }));
     setUsername(nextUser);
     setPassword(nextPw);
   };
@@ -124,7 +129,6 @@ const AuthPanel = forwardRef(function AuthPanel(
   const fail = (err, method) => {
     sounds.error();
     setScrambling(false);
-    setStrip((s) => ({ ...s, animate: false }));
     setLog({ kind: 'err', text: errorLine(err, method) });
     formRef.current?.animate?.(
       [{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }],
@@ -180,18 +184,21 @@ const AuthPanel = forwardRef(function AuthPanel(
 
       <div className="term-mem" aria-hidden="true">
         <span className="term-mem-lbl">STACK</span>
-        <div className="term-cells" key={strip.gen}>
+        <div className="term-cells">
           {!items.length && <span className="term-empty">empty · start typing</span>}
           {hidden > 0 && <span className="term-more">+{hidden}</span>}
-          {visible.map((it, i) => (
-            <span
-              key={i}
-              className={`term-cell${it.m ? ' m' : ''}${it.sep ? ' sep' : ''}${scrambling && !it.sep ? ' h' : ''}`}
-              style={strip.animate ? undefined : { animation: 'none' }}
-            >
-              {cellText(it)}
-            </span>
-          ))}
+          {visible.map((it, i) => {
+            const at = hidden + i;
+            const pushed = at === push.index;
+            return (
+              <span
+                key={pushed ? `push-${push.gen}` : at}
+                className={`term-cell${it.m ? ' m' : ''}${it.sep ? ' sep' : ''}${scrambling && !it.sep ? ' h' : ''}${pushed ? ' push' : ''}`}
+              >
+                {cellText(it)}
+              </span>
+            );
+          })}
         </div>
       </div>
 

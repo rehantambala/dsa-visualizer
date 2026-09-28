@@ -22,3 +22,6 @@ npm-debug.log*
 .DS_Store
 .vscode/
 .idea/
+
+# macOS Finder custom-folder-icon file (literally "Icon\r"; git strips one \r, hence two)
+Icon

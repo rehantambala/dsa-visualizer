@@ -44,7 +44,9 @@
 .term-mem { display: flex; align-items: center; gap: 8px; min-height: 26px; border: 1px dashed var(--term-line); padding: 4px 8px; overflow: hidden; }
 .term-mem-lbl { font-size: 10px; letter-spacing: 0.14em; color: var(--term-muted); flex: none; }
 .term-cells { display: flex; gap: 3px; flex-wrap: nowrap; min-width: 0; overflow: hidden; }
-.term-cell { width: 16px; height: 16px; flex: none; display: grid; place-items: center; font-size: 11px; border: 1px solid var(--term-wall); color: var(--term-fg); animation: termPush 0.18s ease-out; }
+.term-cell { width: 16px; height: 16px; flex: none; display: grid; place-items: center; font-size: 11px; border: 1px solid var(--term-wall); color: var(--term-fg); }
+/* only the cell that was just pushed animates (approved deviation from the reference, which re-animates the whole strip) */
+.term-cell.push { animation: termPush 0.18s ease-out; }
 .term-cell.m { background: var(--pink); border-color: var(--pink); box-shadow: 0 0 6px rgba(255, 44, 143, 0.6); }
 .term-cell.h { border-color: var(--pink); color: var(--pink); background: transparent; box-shadow: none; }
 .term-cell.sep { border: 0; width: 8px; color: var(--term-muted); }
@@ -73,7 +75,7 @@
 .term-log.good b { color: var(--pink); font-weight: 400; }
 
 @media (prefers-reduced-motion: reduce) {
-  .term-cell { animation: none; }
+  .term-cell.push { animation: none; }
   .term { transition: none; }
 }
 

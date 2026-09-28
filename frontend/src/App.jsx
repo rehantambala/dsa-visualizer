@@ -36,6 +36,8 @@ import { useAuth } from "./hooks/useAuth.js";
 import { useSound } from "./hooks/useSound.js";
 import "./components/graph/graph.css";
 
+const SESSION_GATE_MS = 400;
+
 function App() {
   const auth = useAuth();
   const { sounds } = useSound();
@@ -55,6 +57,10 @@ function App() {
   // come through the panel (api.me() confirming a cookie) closes it at once.
   const [introOpen, setIntroOpen] = useState(() => !auth.isLoggedIn);
   const introBusy = useRef(false);
+  // While the first session check is in flight, show only the blank dot-grid
+  // background (max SESSION_GATE_MS) so a valid cookie never flashes the
+  // intro and an expired one never flashes the landing page.
+  const [gateExpired, setGateExpired] = useState(false);
 
   const handleModeChange = (nextMode, event) => {
     if (nextMode === mode || transitionPhase !== "idle") return;
@@ -98,6 +104,11 @@ function App() {
       setView("landing");
     }
   }, [auth.isLoggedIn, view]);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setGateExpired(true), SESSION_GATE_MS);
+    return () => window.clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     if (!auth.isLoggedIn) setIntroOpen(true);
@@ -160,6 +171,10 @@ function App() {
     setTransitionPhase("idle");
     setView("app");
   };
+
+  if (auth.checking && !gateExpired) {
+    return <div className="ix" aria-hidden="true" />;
+  }
 
   if (introOpen) {
     return (

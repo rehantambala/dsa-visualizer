@@ -16,6 +16,9 @@ export function useAuth() {
   const [user, setUser] = useState(() => getStoredUser());
   const [error, setError] = useState(null);
   const [pending, setPending] = useState(false);
+  // true until the first api.me() settles - App.jsx holds a blank screen
+  // (briefly) while this is unresolved so nobody sees the wrong first screen.
+  const [checking, setChecking] = useState(true);
 
   // Always confirm against the server on mount - the HttpOnly cookie can't be
   // inspected from JS, so a cached user object alone can't tell us whether the
@@ -30,7 +33,8 @@ export function useAuth() {
       .catch(() => {
         clearStoredUser();
         setUser(null);
-      });
+      })
+      .finally(() => setChecking(false));
   }, []);
 
   // login / register / loginWithGoogle resolve to { ok: true } or
@@ -65,5 +69,5 @@ export function useAuth() {
     setUser(null);
   }, []);
 
-  return { user, login, register, loginWithGoogle, logout, error, pending, isLoggedIn: Boolean(user) };
+  return { user, login, register, loginWithGoogle, logout, error, pending, checking, isLoggedIn: Boolean(user) };
 }

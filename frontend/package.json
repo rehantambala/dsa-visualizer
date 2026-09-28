@@ -20,5 +20,6 @@
     "nodemon": "^3.1.14",
     "vite": "^5.3.3",
     "vitest": "^4.1.11"
-  }
+  },
+  "packageManager": "pnpm@12.6.0"
 }

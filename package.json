@@ -1,12 +1,7 @@
 {
-  "name": "dsa-visualizer ",
+  "name": "dsa-visualizer",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "private": true,
+  "description": "Full-stack interactive DSA learning platform. This root has no build of its own - see frontend/ and backend/, which are independent apps with their own package.json, dependencies, and test/build commands (see README.md).",
+  "license": "MIT"
 }

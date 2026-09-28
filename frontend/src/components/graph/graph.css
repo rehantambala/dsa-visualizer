@@ -16,7 +16,7 @@
 }
 
 .graph-edge {
-  stroke: rgb(var(--white-rgb) / 0.38);
+  stroke: rgba(255, 255, 255, 0.38);
   stroke-width: 2;
   stroke-dasharray: 100;
   stroke-dashoffset: 0;
@@ -34,7 +34,7 @@
 .graph-edge.is-active {
   stroke: var(--pink);
   stroke-width: 2.5;
-  filter: drop-shadow(0 0 6px rgb(var(--pink-rgb) / 0.6));
+  filter: drop-shadow(0 0 6px rgba(255, 44, 143, 0.6));
 }
 
 /* Overlay line drawn only on the active edge - a second stroke with a moving dash
@@ -79,8 +79,8 @@
 }
 
 .graph-node circle {
-  fill: rgb(var(--white-rgb) / 0.04);
-  stroke: rgb(var(--white-rgb) / 0.28);
+  fill: rgba(255, 255, 255, 0.04);
+  stroke: rgba(255, 255, 255, 0.28);
   stroke-width: 1.5;
   transition:
     fill 260ms ease,
@@ -91,7 +91,7 @@
 
 .graph-node text {
   fill: var(--white);
-  font-family: var(--font-mono);
+  font-family: "IBM Plex Mono", "Courier New", monospace;
   font-size: 13px;
   letter-spacing: 0.02em;
   transition: fill 200ms ease;
@@ -109,8 +109,8 @@
 }
 
 .graph-node-visited circle {
-  fill: rgb(var(--pink-rgb) / 0.16);
-  stroke: rgb(var(--pink-rgb) / 0.55);
+  fill: rgba(255, 44, 143, 0.16);
+  stroke: rgba(255, 44, 143, 0.55);
   animation: graphNodeSettle 380ms ease-out;
 }
 
@@ -140,10 +140,10 @@
 
 @keyframes graphFrontierPulse {
   0%, 100% {
-    filter: drop-shadow(0 0 0 rgb(var(--pink-rgb) / 0));
+    filter: drop-shadow(0 0 0 rgba(255, 44, 143, 0));
   }
   50% {
-    filter: drop-shadow(0 0 6px rgb(var(--pink-rgb) / 0.55));
+    filter: drop-shadow(0 0 6px rgba(255, 44, 143, 0.55));
   }
 }
 
@@ -169,11 +169,11 @@
 
 @keyframes graphCurrentPulse {
   0%, 100% {
-    filter: drop-shadow(0 0 10px rgb(var(--pink-rgb) / 0.75));
+    filter: drop-shadow(0 0 10px rgba(255, 44, 143, 0.75));
     transform: scale(1);
   }
   50% {
-    filter: drop-shadow(0 0 18px rgb(var(--pink-rgb) / 1));
+    filter: drop-shadow(0 0 18px rgba(255, 44, 143, 1));
     transform: scale(1.06);
   }
 }
@@ -195,7 +195,7 @@
   gap: 18px;
   margin-top: 14px;
   font-size: 0.7rem;
-  color: rgb(var(--white-rgb) / 0.6);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .graph-legend-item {
@@ -226,12 +226,12 @@
   height: 10px;
   border-radius: 50%;
   display: inline-block;
-  border: 1px solid rgb(var(--white-rgb) / 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.28);
 }
 
 .graph-legend-item.graph-node-visited i {
-  background: rgb(var(--pink-rgb) / 0.16);
-  border-color: rgb(var(--pink-rgb) / 0.55);
+  background: rgba(255, 44, 143, 0.16);
+  border-color: rgba(255, 44, 143, 0.55);
 }
 
 .graph-legend-item.graph-node-frontier i {
@@ -253,7 +253,7 @@
 
 .graph-controls-hint {
   margin: 0 0 16px;
-  color: rgb(var(--white-rgb) / 0.6);
+  color: rgba(255, 255, 255, 0.6);
   font-size: 0.74rem;
   line-height: 1.7;
   max-width: 720px;
@@ -263,7 +263,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: end;
-  gap: var(--space-3);
+  gap: 12px;
 }
 
 .graph-controls-row .pixel-btn {
@@ -283,7 +283,7 @@
 .sorting-controls-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: 12px;
 }
 
 .sorting-controls-grid .pixel-btn {

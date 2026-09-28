@@ -13,7 +13,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: rgb(var(--white-rgb) / 0.75);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .sound-toggle-btn:hover:not(:disabled) {
@@ -29,7 +29,7 @@
   padding: 12px 14px 14px;
   background: #050505;
   border: 1px solid var(--line);
-  box-shadow: 0 12px 30px rgb(var(--black-rgb) / 0.55), 0 0 0 1px rgb(var(--pink-rgb) / 0.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 44, 143, 0.08);
   animation: soundPopIn 140ms ease-out;
 }
 
@@ -54,7 +54,7 @@
 .sound-popover-label {
   font-size: 0.64rem;
   letter-spacing: 0.12em;
-  color: rgb(var(--white-rgb) / 0.5);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .sound-mute-btn {
@@ -88,9 +88,9 @@
   appearance: none;
   width: 12px;
   height: 12px;
-  border-radius: var(--radius-pill);
+  border-radius: 999px;
   background: var(--pink);
-  box-shadow: 0 0 8px rgb(var(--pink-rgb) / 0.6);
+  box-shadow: 0 0 8px rgba(255, 44, 143, 0.6);
   cursor: pointer;
 }
 
@@ -98,9 +98,9 @@
   width: 12px;
   height: 12px;
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: 999px;
   background: var(--pink);
-  box-shadow: 0 0 8px rgb(var(--pink-rgb) / 0.6);
+  box-shadow: 0 0 8px rgba(255, 44, 143, 0.6);
   cursor: pointer;
 }
 

@@ -37,4 +37,15 @@ describe('resolveSessionId', () => {
     const b = resolveSessionId(reqB, 'same-guest-session-string');
     expect(a).not.toBe(b);
   });
+
+  // SECURITY REGRESSION: an unauthenticated caller must never be able to read
+  // another user's saved state by passing "user:<their real account id>" as
+  // the sessionId - that id isn't secret (register/login return it as
+  // user.id), so trusting it verbatim from a guest would let anyone fetch any
+  // other user's save without ever logging in.
+  it('never lets an unauthenticated guest resolve into the "user:" namespace', () => {
+    const req = {};
+    expect(resolveSessionId(req, 'user:some-real-account-id')).not.toBe('user:some-real-account-id');
+    expect(resolveSessionId(req, 'user:some-real-account-id')).toBe('anonymous-guest');
+  });
 });

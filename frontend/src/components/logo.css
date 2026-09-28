@@ -1,0 +1,19 @@
+/* frontend/src/components/logo.css - styles for Logo.jsx */
+
+.logo__wall{fill:#6d5b66}
+.logo__node{fill:var(--white)}
+.logo__path{fill:var(--pink)}
+.logo__explored{fill:var(--pink);fill-opacity:.2}
+.logo{filter:drop-shadow(0 0 6px rgba(255,44,143,.45))}
+
+/* intro: each rect fades in at its own --d (set from INTRO in logoData.js);
+   walls .35s, everything else .12s - same as the reference's transitions */
+.logo--intro rect{opacity:0;animation:logoIn .12s ease both;animation-delay:var(--d,0ms)}
+.logo--intro .logo__wall{animation-duration:.35s}
+
+/* live: path keeps re-tracing (navbar) */
+.logo--live .logo__path{animation:logoTrace 4s linear infinite;animation-delay:calc(var(--i)*70ms)}
+
+@keyframes logoIn{from{opacity:0}to{opacity:1}}
+@keyframes logoTrace{0%{opacity:.18}8%{opacity:1}70%{opacity:1}100%{opacity:.18}}
+@media (prefers-reduced-motion:reduce){.logo *{animation:none!important;opacity:1!important}}

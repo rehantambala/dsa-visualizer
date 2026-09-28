@@ -91,11 +91,23 @@ dsa-visualizer/
 
 ## Deployment Notes (Milestone 11)
 
-- **Frontend (Vercel):** Deploy `frontend/` and set `VITE_API_BASE_URL` to the Render backend URL.
-- **Backend (Render):** Use `render.yaml` from repo root. The backend exposes `/api/algorithms`, `/api/analytics`, `/api/simulations`, and `/api/execute`.
+- **Frontend (Vercel):** Deploy `frontend/`. `frontend/vercel.json` rewrites `/api/*`
+  to the Render backend at Vercel's edge, so the browser only ever talks to the
+  Vercel domain for REST calls - this keeps the login cookie same-site (it's set
+  with `SameSite=Lax`, which browsers strip from genuinely cross-site
+  fetch/XHR requests). **Do not set `VITE_API_BASE_URL` in production** - leaving
+  it unset is what makes REST calls go through that proxy instead of hitting the
+  Render URL directly, which would silently break session persistence after login.
+  Set `VITE_SOCKET_URL` to the Render backend URL instead - the Linked List
+  visualizer's Socket.io connection can't go through the rewrite proxy and needs
+  the real backend origin directly (it doesn't rely on the auth cookie, so this is
+  safe). See `frontend/src/services/api.js` for the full explanation.
+- **Backend (Render):** Use `render.yaml` from repo root. The backend exposes `/api/algorithms`, `/api/analytics`, `/api/simulations`, `/api/execute`, and `/api/auth`.
 - **Required backend env vars (set these in Render, not committed anywhere):**
   - `MONGO_URI` — your MongoDB Atlas connection string. (Note: the code and `render.yaml` both read `MONGO_URI`, not `MONGODB_URI` — using the wrong name will fail silently on boot.)
-  - `FRONTEND_ORIGIN` — the deployed frontend URL (e.g. your Vercel domain), used for Socket.io CORS. Defaults to `http://localhost:5173` for local dev.
+  - `FRONTEND_ORIGIN` — the deployed frontend URL (e.g. your Vercel domain), used for CORS and Socket.io. Defaults to `http://localhost:5173` for local dev.
+  - `JWT_SECRET` — required; the server refuses to start without it.
+  - `GOOGLE_CLIENT_ID` — optional; enables Google Sign-In when set (must match the frontend's `VITE_GOOGLE_CLIENT_ID`).
   - `PORT` — defaults to `4000`.
 
 ## Local Setup

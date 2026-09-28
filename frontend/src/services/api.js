@@ -1,4 +1,19 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+// PRODUCTION TOPOLOGY: the auth cookie is set with SameSite=Lax (see
+// backend/src/controllers/authController.js), which browsers never attach to
+// a cross-SITE fetch/XHR - only to same-site requests and top-level GET
+// navigations. Calling the Render backend's own origin directly from the
+// Vercel-hosted frontend would be cross-site, so every authenticated request
+// would silently drop the cookie (login would appear to work, then every
+// follow-up call - including session restore on refresh - would look logged
+// out). frontend/vercel.json rewrites `/api/*` to the backend at Vercel's
+// edge, so from the browser's point of view the request never leaves the
+// frontend's own origin - same-site, cookie included, no CORS preflight
+// needed either. That's why this defaults to a relative path ('') in a
+// production build instead of an absolute backend URL. Only set
+// VITE_API_BASE_URL if you deploy the frontend somewhere without that proxy
+// rewrite in front of it, and switch the backend cookie to
+// SameSite=None; Secure to match.
+const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '' : 'http://localhost:4000');
 
 // The login token lives in an HttpOnly cookie now (not in JS-readable storage -
 // see utils/auth.js), so there's no token to attach manually. `credentials:
@@ -49,3 +64,10 @@ export const AUTH_FETCH_OPTIONS = {
   credentials: 'include',
   csrfHeader: { 'X-Requested-With': 'dsa-visualizer' },
 };
+
+// Exposed so every direct fetch() caller (like LinkedListVisualizer.jsx) resolves
+// REST calls the same way this file does - through the same-origin Vercel proxy
+// in production - instead of each file guessing its own base URL and risking the
+// cookie/CORS mismatch explained above. Socket.io is a separate concern: it can't
+// go through that proxy, so it uses its own VITE_SOCKET_URL (see that file).
+export { API_BASE };

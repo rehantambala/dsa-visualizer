@@ -27,14 +27,16 @@ import { io } from "socket.io-client";
 import LinkedListStage from "./LinkedListStage.jsx";
 import { logRun } from "../../utils/logRun.js";
 import { getSessionId } from "../../utils/session.js";
-import { AUTH_FETCH_OPTIONS } from "../../services/api.js";
+import { AUTH_FETCH_OPTIONS, API_BASE } from "../../services/api.js";
 
-// BUG FIXED: every network call in this file was hardcoded to http://localhost:4000.
-// That works in local dev but breaks for every visitor once this is deployed - their
-// browser has no localhost:4000, so the socket, save, load, and execute calls would
-// all silently fail in production. Reading from the same env var api.js already uses
-// keeps local dev working (falls back to localhost) while making deployed builds work.
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+// Socket.io can't go through the same-origin Vercel proxy the REST API_BASE
+// (imported above) relies on in production - see services/api.js for why REST
+// calls need that proxy for the auth cookie to survive. A websocket connection
+// isn't proxied the same way, so it always needs the backend's real absolute
+// origin. Set VITE_SOCKET_URL to the deployed backend URL (e.g. the Render URL);
+// it falls back to localhost for local dev where frontend and backend run on
+// different ports anyway.
+const SOCKET_BASE = import.meta.env.VITE_SOCKET_URL || "http://localhost:4000";
 import TerminalConsole from "../shared/TerminalConsole.jsx";
 import TimeScrubber from "../shared/TimeScrubber.jsx";
 import {
@@ -317,7 +319,7 @@ function LinkedListVisualizer({ pagePhase = "idle" }) {
   }, []);
 
   useEffect(() => {
-    const newSocket = io(API_BASE);
+    const newSocket = io(SOCKET_BASE);
     setSocket(newSocket);
 
     newSocket.on("receive-operation", (data) => {

@@ -18,7 +18,7 @@
  * - nav-origin transition pulse and staged page reveal
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ArrayVisualizer from "./components/array/ArrayVisualizer.jsx";
 import StackVisualizer from "./components/stack/StackVisualizer.jsx";
 import QueueVisualizer from "./components/queue/QueueVisualizer.jsx";
@@ -30,6 +30,7 @@ import PathfindingVisualizer from "./components/pathfinding/PathfindingVisualize
 import AnalyticsDashboard from "./components/AnalyticsDashboard.jsx";
 import LandingPage from "./components/landing/LandingPage.jsx";
 import AuthModal from "./components/auth/AuthModal.jsx";
+import IntroScreen from "./components/intro/IntroScreen.jsx";
 import SoundToggle from "./components/shared/SoundToggle.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 import { useSound } from "./hooks/useSound.js";
@@ -47,6 +48,13 @@ function App() {
   const [displayMode, setDisplayMode] = useState("array");
   const [transitionPhase, setTransitionPhase] = useState("idle");
   const [transitionOrigin, setTransitionOrigin] = useState({ x: 0, y: 0 });
+  // Logged-out users get the intro/login screen instead of the landing page.
+  // It closes itself (onDone) after its success sequence - useAuth flips
+  // isLoggedIn the moment the API answers, so while the panel is mid-submit
+  // (introBusy) that flip must not yank the screen away. A login that didn't
+  // come through the panel (api.me() confirming a cookie) closes it at once.
+  const [introOpen, setIntroOpen] = useState(() => !auth.isLoggedIn);
+  const introBusy = useRef(false);
 
   const handleModeChange = (nextMode, event) => {
     if (nextMode === mode || transitionPhase !== "idle") return;
@@ -90,6 +98,11 @@ function App() {
       setView("landing");
     }
   }, [auth.isLoggedIn, view]);
+
+  useEffect(() => {
+    if (!auth.isLoggedIn) setIntroOpen(true);
+    else if (!introBusy.current) setIntroOpen(false);
+  }, [auth.isLoggedIn]);
 
   // The nav is a single horizontally-scrolling row; keep the active tab in
   // view (centred) whenever the module changes.
@@ -147,6 +160,16 @@ function App() {
     setTransitionPhase("idle");
     setView("app");
   };
+
+  if (introOpen) {
+    return (
+      <IntroScreen
+        auth={auth}
+        onBusyChange={(busy) => { introBusy.current = busy; }}
+        onDone={() => { introBusy.current = false; setIntroOpen(false); }}
+      />
+    );
+  }
 
   if (view === "landing") {
     return <LandingPage onEnter={handleEnter} auth={auth} />;

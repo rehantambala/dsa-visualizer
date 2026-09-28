@@ -1,0 +1,43 @@
+/* frontend/src/components/intro/intro.css
+
+   Intro screen layout from design/intro-reference.html (ix- prefix). Tokens
+   (--term-*) are declared in auth/auth.css, shared with the panel. */
+
+.ix {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: var(--term-fg);
+  letter-spacing: normal;
+  background-color: #000;
+  background-image:
+    radial-gradient(var(--term-line) 1px, transparent 1px),
+    radial-gradient(circle at 50% 30%, rgba(255, 44, 143, 0.12), transparent 55%);
+  background-size: 28px 28px, 100% 100%;
+  background-position: -14px -14px, 0 0;
+}
+
+.ix-field { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+.ix-flash { position: fixed; inset: 0; background: var(--pink); opacity: 0; pointer-events: none; z-index: 3; transition: opacity 0.5s; }
+
+.ix-wrap { position: relative; z-index: 1; min-height: 100vh; display: grid; place-items: center; padding-block: 48px; padding-inline: 16px; }
+.ix-stage { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; width: 100%; max-width: 440px; }
+
+.ix-mark .logo { width: clamp(96px, 22vw, 168px); height: auto; display: block; filter: drop-shadow(0 0 16px rgba(255, 44, 143, 0.45)); }
+.ix-mark .logo__node { fill: var(--term-fg); }
+
+.ix-title { font-weight: 700; font-size: clamp(24px, 5vw, 40px); letter-spacing: 0.06em; min-height: 1.3em; white-space: nowrap; margin: 0; text-shadow: 0 0 18px rgba(255, 44, 143, 0.45); }
+.ix-title i { font-style: normal; color: var(--pink); }
+.ix-title .s { color: var(--pink); opacity: 0.7; }
+.ix-cur { display: inline-block; width: 0.55em; height: 0.9em; background: var(--term-fg); vertical-align: -0.08em; margin-left: 4px; animation: ixBlink 1s steps(1) infinite; }
+@keyframes ixBlink { 50% { opacity: 0; } }
+
+.ix-tag { margin: 0; color: var(--term-muted); font-size: 13px; letter-spacing: 0.04em; opacity: 0; transition: opacity 0.6s; }
+.ix-hint { margin: -8px 0 0; color: var(--term-muted); font-size: 11px; letter-spacing: 0.12em; opacity: 0; transition: opacity 0.6s; }
+.ix-hint b { color: var(--pink); font-weight: 400; }
+.ix-tag.is-shown, .ix-hint.is-shown { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ix-cur { animation: none; }
+  .ix-tag, .ix-hint { transition: none; }
+}

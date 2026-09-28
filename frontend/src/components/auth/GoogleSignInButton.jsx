@@ -1,10 +1,11 @@
 /**
  * frontend/src/components/auth/GoogleSignInButton.jsx
  *
- * Renders Google's own "Sign in with Google" button (via Google Identity
- * Services, loaded in index.html) using its `filled_black` / `pill` theme so
- * it sits naturally in this app's black + pink pixel UI, wrapped in a panel
- * that picks up the same border/glow language as the rest of the site.
+ * Renders Google's own "Continue with Google" button (via Google Identity
+ * Services, loaded in index.html): filled_black / rectangular / large, sized
+ * to the full width of its container (Google caps it at 200-400px) so it sits
+ * flush with the ACCESS TERMINAL inputs. Re-rendered when the container
+ * width changes.
  *
  * Requires VITE_GOOGLE_CLIENT_ID to be set (see frontend/.env.example). If
  * it's missing, this renders a disabled look-alike with a hint instead of a
@@ -17,6 +18,11 @@ const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 function GoogleSignInButton({ onCredential, disabled }) {
   const buttonRef = useRef(null);
   const [scriptReady, setScriptReady] = useState(false);
+  const [width, setWidth] = useState(0);
+  // GIS keeps whatever callback it was initialized with, so route it through
+  // a ref - the parent's latest onCredential is always the one that runs.
+  const onCredentialRef = useRef(onCredential);
+  onCredentialRef.current = onCredential;
 
   useEffect(() => {
     if (!CLIENT_ID) return undefined;
@@ -37,24 +43,33 @@ function GoogleSignInButton({ onCredential, disabled }) {
   }, []);
 
   useEffect(() => {
-    if (!scriptReady || !CLIENT_ID || !buttonRef.current) return;
+    const node = buttonRef.current;
+    if (!node) return undefined;
+    const observer = new ResizeObserver(([entry]) => {
+      setWidth(Math.round(Math.min(400, Math.max(200, entry.contentRect.width))));
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!scriptReady || !CLIENT_ID || !buttonRef.current || !width) return;
 
     window.google.accounts.id.initialize({
       client_id: CLIENT_ID,
-      callback: (response) => onCredential(response.credential),
+      callback: (response) => onCredentialRef.current(response.credential),
     });
 
     buttonRef.current.innerHTML = "";
     window.google.accounts.id.renderButton(buttonRef.current, {
       theme: "filled_black",
-      shape: "pill",
+      shape: "rectangular",
       size: "large",
       text: "continue_with",
       logo_alignment: "left",
-      width: 320,
+      width,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scriptReady]);
+  }, [scriptReady, width]);
 
   if (!CLIENT_ID) {
     return (

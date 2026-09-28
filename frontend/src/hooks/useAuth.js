@@ -33,53 +33,29 @@ export function useAuth() {
       });
   }, []);
 
-  const login = useCallback(async (username, password) => {
+  // login / register / loginWithGoogle resolve to { ok: true } or
+  // { ok: false, error } where error is an ApiError (see services/api.js) -
+  // callers read error.kind ('unauthorized' | 'server' | 'network') straight
+  // off the result instead of waiting for the `error` state to re-render.
+  const run = useCallback(async (call) => {
     setPending(true);
     setError(null);
     try {
-      const res = await api.login(username, password);
+      const res = await call();
       setStoredUser(res.user);
       setUser(res.user);
-      return true;
+      return { ok: true };
     } catch (err) {
       setError(err.message);
-      return false;
+      return { ok: false, error: err };
     } finally {
       setPending(false);
     }
   }, []);
 
-  const register = useCallback(async (username, password) => {
-    setPending(true);
-    setError(null);
-    try {
-      const res = await api.register(username, password);
-      setStoredUser(res.user);
-      setUser(res.user);
-      return true;
-    } catch (err) {
-      setError(err.message);
-      return false;
-    } finally {
-      setPending(false);
-    }
-  }, []);
-
-  const loginWithGoogle = useCallback(async (idToken) => {
-    setPending(true);
-    setError(null);
-    try {
-      const res = await api.googleLogin(idToken);
-      setStoredUser(res.user);
-      setUser(res.user);
-      return true;
-    } catch (err) {
-      setError(err.message);
-      return false;
-    } finally {
-      setPending(false);
-    }
-  }, []);
+  const login = useCallback((username, password) => run(() => api.login(username, password)), [run]);
+  const register = useCallback((username, password) => run(() => api.register(username, password)), [run]);
+  const loginWithGoogle = useCallback((idToken) => run(() => api.googleLogin(idToken)), [run]);
 
   const logout = useCallback(() => {
     api.logout().catch(() => {

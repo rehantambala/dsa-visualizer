@@ -21,21 +21,39 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? ''
 // during local dev (and cross-subdomain in production). The custom header is
 // required by the backend's CSRF guard (backend/src/middleware/csrf.js) on
 // every mutating request - see that file for why a custom header stops CSRF.
+// Every failure is an ApiError so the UI can tell them apart:
+//   kind 'unauthorized' - 401 (wrong credentials / expired session)
+//   kind 'server'       - any other non-2xx; `message` is the server's own text
+//   kind 'network'      - fetch itself threw (backend down, offline, CORS); status 0
+export class ApiError extends Error {
+  constructor(message, { kind, status }) {
+    super(message);
+    this.name = 'ApiError';
+    this.kind = kind;
+    this.status = status;
+  }
+}
+
 async function request(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Requested-With': 'dsa-visualizer',
-      ...(options.headers || {}),
-    },
-    ...options,
-  });
+  let res;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'dsa-visualizer',
+        ...(options.headers || {}),
+      },
+      ...options,
+    });
+  } catch (err) {
+    throw new ApiError(err?.message || 'Network request failed', { kind: 'network', status: 0 });
+  }
   const isJson = (res.headers.get('content-type') || '').includes('application/json');
   const body = isJson ? await res.json().catch(() => null) : null;
   if (!res.ok) {
     const message = body?.message || `Request failed: ${path}`;
-    throw new Error(message);
+    throw new ApiError(message, { kind: res.status === 401 ? 'unauthorized' : 'server', status: res.status });
   }
   return body;
 }

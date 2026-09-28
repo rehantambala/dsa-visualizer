@@ -91,7 +91,7 @@
 
 .graph-node text {
   fill: var(--white);
-  font-family: "IBM Plex Mono", "Courier New", monospace;
+  font-family: "Courier New", Courier, monospace;
   font-size: 13px;
   letter-spacing: 0.02em;
   transition: fill 200ms ease;

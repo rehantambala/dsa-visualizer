@@ -64,7 +64,7 @@ body,
 body {
   background: var(--bg);
   color: var(--white);
-  font-family: "IBM Plex Mono", "Courier New", monospace;
+  font-family: "Courier New", Courier, monospace;
   letter-spacing: 0.03em;
 }
 

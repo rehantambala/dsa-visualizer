@@ -1,0 +1,301 @@
+/* frontend/src/components/stack/stack.css
+
+   What this file is for:
+   - Final stack-only polish overrides.
+   - Tightens the stack chamber so the cards feel narrower, cleaner, and more compact.
+   - Leaves Array, Queue, and Linked List untouched.
+
+   What it connects to:
+   - imported by ./StackVisualizer.jsx
+
+   What it displays:
+   - refined stack chamber proportions
+   - tighter labels and rails
+   - lighter active glow
+   - cleaner compact stack cartridges
+*/
+
+.stack-page .stack-stage-wrap {
+  grid-template-columns: 122px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.stack-page .stack-meta-column {
+  gap: 10px;
+}
+
+.stack-page .stack-top-badge {
+  padding: 9px 10px;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  box-shadow: inset 0 0 0 1px rgba(255, 44, 143, 0.08);
+}
+
+.stack-page .stack-meta-box {
+  padding: 12px 10px;
+}
+
+.stack-page .stack-meta-label {
+  font-size: 0.58rem;
+  margin-bottom: 6px;
+}
+
+.stack-page .stack-meta-value {
+  font-size: 0.8rem;
+}
+
+.stack-page .stack-chamber {
+  min-height: 560px;
+}
+
+.stack-page .stack-chamber-frame-top {
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  padding: 7px 10px;
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+}
+
+.stack-page .stack-chamber-inner {
+  min-height: 502px;
+  padding: 52px 16px 40px;
+  gap: 10px;
+}
+
+.stack-page .stack-node-row {
+  gap: 8px;
+}
+
+.stack-page .stack-node-row.is-top-row {
+  transform: translateY(-1px);
+}
+
+.stack-page .stack-node-rail {
+  width: 18px;
+  height: 2px;
+  box-shadow: 0 0 8px rgba(255, 44, 143, 0.12);
+}
+
+.stack-page .stack-node-label {
+  min-width: 84px;
+  padding: 5px 8px;
+  font-size: 0.56rem;
+  letter-spacing: 0.12em;
+}
+
+.stack-page .stack-node-row > .pixel-block {
+  width: 128px;
+  min-height: 124px;
+  padding: 9px;
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.stack-page .stack-node-row > .pixel-block .pixel-grid {
+  inset: 10px;
+  gap: 2px;
+}
+
+.stack-page .stack-node-row > .pixel-block .pixel-block-topline {
+  margin-bottom: 7px;
+}
+
+.stack-page .stack-node-row > .pixel-block .pixel-block-bottomline {
+  margin-top: 7px;
+}
+
+.stack-page .stack-node-row > .pixel-block .pixel-block-status,
+.stack-page .stack-node-row > .pixel-block .pixel-block-readout {
+  padding: 3px 7px;
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+}
+
+.stack-page .stack-node-row > .pixel-block .pixel-block-energy {
+  width: 34px;
+  height: 3px;
+  opacity: 0.82;
+}
+
+.stack-page .stack-node-row > .pixel-block .pixel-value-matrix {
+  min-height: 68px;
+}
+
+.stack-page .stack-node-row > .pixel-block .pixel-number {
+  gap: 3px;
+}
+
+.stack-page .stack-node-row > .pixel-block .digit-matrix {
+  grid-template-columns: repeat(5, 6px);
+  grid-template-rows: repeat(7, 6px);
+  gap: 2px;
+}
+
+.stack-page .stack-node-row > .pixel-block .digit-matrix.compact {
+  grid-template-columns: repeat(5, 5px);
+  grid-template-rows: repeat(7, 5px);
+  gap: 2px;
+}
+
+.stack-page .stack-node-row > .pixel-block:hover,
+.stack-page .stack-node-row > .pixel-block.is-hovered {
+  transform: translateY(-4px) scale(1.014);
+}
+
+.stack-page .stack-node-row > .pixel-block.is-active {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow:
+    0 0 18px rgba(255, 44, 143, 0.16),
+    inset 0 0 16px rgba(255, 44, 143, 0.08);
+}
+
+.stack-page .stack-node-row.is-top-row > .pixel-block.is-active {
+  border-color: rgba(255, 44, 143, 0.86);
+  box-shadow:
+    0 0 20px rgba(255, 44, 143, 0.18),
+    0 0 30px rgba(255, 44, 143, 0.08),
+    inset 0 0 14px rgba(255, 44, 143, 0.08);
+}
+
+.stack-page .stack-node-row > .pixel-block.is-animated {
+  box-shadow:
+    0 0 16px rgba(255, 44, 143, 0.1),
+    inset 0 0 14px rgba(255, 44, 143, 0.06);
+}
+
+.stack-page .stack-node-row > .pixel-block.is-insert {
+  animation-duration: 300ms;
+}
+
+.stack-page .stack-node-row > .pixel-block.is-delete {
+  animation-duration: 280ms;
+}
+
+.stack-page .stack-node-row > .pixel-block.is-update {
+  animation-duration: 300ms;
+}
+
+.stack-page .stack-node-row.is-entering-row {
+  animation-duration: 280ms;
+}
+
+.stack-page .stack-node-row.is-exiting-row {
+  animation-duration: 280ms;
+}
+
+.stack-page .stack-empty-state {
+  min-height: 410px;
+}
+
+.stack-page .stack-empty-title {
+  font-size: 0.92rem;
+}
+
+.stack-page .stack-empty-subtitle {
+  font-size: 0.72rem;
+}
+
+.stack-page .stack-floor-line {
+  left: 28px;
+  right: 28px;
+  bottom: 18px;
+  height: 3px;
+  box-shadow: 0 0 10px rgba(255, 44, 143, 0.12);
+}
+
+.stack-page .stack-message-box {
+  padding: 12px 14px;
+}
+
+.stack-page .stack-message-label {
+  font-size: 0.56rem;
+}
+
+.stack-page .stack-message-text {
+  font-size: 0.72rem;
+}
+
+.stack-page .stack-state-strip {
+  gap: 10px;
+}
+
+.stack-page .stack-state-tile {
+  padding: 10px 12px;
+}
+
+.stack-page .stack-state-tile span {
+  font-size: 0.58rem;
+  margin-bottom: 6px;
+}
+
+.stack-page .stack-state-tile strong {
+  font-size: 0.76rem;
+}
+
+.stack-page .stack-message-panel,
+.stack-page .stack-reading-row,
+.stack-page .stack-complexity-grid > div {
+  font-size: 0.72rem;
+}
+
+.stack-page .stack-card .panel-title {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 860px) {
+  .stack-page .stack-stage-wrap {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .stack-page .stack-meta-column {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .stack-page .stack-chamber {
+    min-height: 520px;
+  }
+
+  .stack-page .stack-chamber-inner {
+    min-height: 460px;
+    padding: 50px 12px 34px;
+  }
+}
+
+@media (max-width: 640px) {
+  .stack-page .stack-meta-column {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stack-page .stack-node-row {
+    gap: 10px;
+  }
+
+  .stack-page .stack-node-label {
+    min-width: 74px;
+    font-size: 0.52rem;
+  }
+
+  .stack-page .stack-node-row > .pixel-block {
+    width: 118px;
+    min-height: 116px;
+    padding: 8px;
+  }
+
+  .stack-page .stack-node-row > .pixel-block .pixel-value-matrix {
+    min-height: 62px;
+  }
+
+  .stack-page .stack-node-row > .pixel-block .digit-matrix {
+    grid-template-columns: repeat(5, 5px);
+    grid-template-rows: repeat(7, 5px);
+  }
+
+  .stack-page .stack-node-row > .pixel-block .digit-matrix.compact {
+    grid-template-columns: repeat(5, 4px);
+    grid-template-rows: repeat(7, 4px);
+  }
+}

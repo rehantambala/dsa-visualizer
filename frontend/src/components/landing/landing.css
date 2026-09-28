@@ -1,0 +1,436 @@
+/* frontend/src/components/landing/landing.css
+   Landing page. Background layers (.pixel-noise / .pink-glow) and the page-energy
+   burst transition are the REAL app classes from index.css, applied here directly
+   in LandingPage.jsx - not reinvented. This file only adds landing-specific
+   layout, the boot sequence, and the title decode/glitch effect.
+*/
+
+.landing-page {
+  position: relative;
+  min-height: 100vh;
+  padding: 56px 32px 48px;
+  overflow: hidden;
+  isolation: isolate;
+  --parallax-x: 0px;
+  --parallax-y: 0px;
+  --scroll-y: 0px;
+}
+
+/* Cursor parallax: background layers drift opposite/with the cursor at
+   different rates, so the hero reads as layered depth instead of a flat
+   backdrop. Scoped to this page only - App.jsx's other pages render their
+   own .pixel-noise/.pink-glow instances that never get --parallax-x/-y set,
+   so they're untouched. */
+.landing-page .pixel-noise {
+  transform: translate3d(calc(var(--parallax-x) * -0.6), calc(var(--parallax-y) * -0.6), 0);
+  transition: transform 240ms ease-out;
+}
+
+.landing-page .pink-glow-one {
+  transform: translate3d(calc(var(--parallax-x) * 1.4), calc(var(--parallax-y) * 1.4), 0);
+  transition: transform 320ms ease-out;
+}
+
+.landing-page .pink-glow-two {
+  transform: translate3d(calc(var(--parallax-x) * -1.1), calc(var(--parallax-y) * -1.1), 0);
+  transition: transform 320ms ease-out;
+}
+
+/* ── grid floor: Tron-style receding horizon for real spatial weight ────
+   Single element, perspective + rotateX applied inline in the transform
+   list (valid since Transforms L2 - no separate wrapper needed). Drifts
+   slowly on its own, plus reacts to cursor parallax and lags behind actual
+   page scroll for a real depth-of-field feel as you scroll into content. */
+.landing-grid-floor {
+  position: absolute;
+  left: -25%;
+  right: -25%;
+  top: 30%;
+  bottom: -40%;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(255, 44, 143, 0.16) 0, rgba(255, 44, 143, 0.16) 1px, transparent 1px, transparent 64px),
+    repeating-linear-gradient(0deg, rgba(255, 44, 143, 0.16) 0, rgba(255, 44, 143, 0.16) 1px, transparent 1px, transparent 64px);
+  background-size: 64px 64px;
+  transform:
+    perspective(600px)
+    rotateX(62deg)
+    translate3d(calc(var(--parallax-x) * 0.5), calc(var(--scroll-y, 0px) * -0.12 + var(--parallax-y) * 0.5), 0);
+  mask-image: linear-gradient(to bottom, transparent, black 25%, black 70%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 25%, black 70%, transparent);
+  animation: gridFloorDrift 14s linear infinite;
+}
+
+@keyframes gridFloorDrift {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 0 64px, 64px 0; }
+}
+
+/* ── ambient particle field: depth via many small parallax layers ────── */
+.landing-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.landing-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--pink);
+  box-shadow: 0 0 6px 1px rgba(255, 44, 143, 0.7);
+  opacity: 0;
+  animation: particleFloat linear infinite;
+  will-change: transform, opacity;
+}
+
+/* Parallax offset (--parallax-x/-y, --scroll-y) is baked directly into both
+   keyframe endpoints rather than set as a separate static `transform` -
+   `animation` fully replaces an element's transform for its duration, so a
+   transform declared outside the keyframes would just be silently ignored
+   while this runs. Baking it in means it still tracks the live cursor/scroll
+   position every frame, since var() resolves at used-value time even mid-
+   animation. */
+@keyframes particleFloat {
+  0% {
+    opacity: 0;
+    transform: translate3d(
+      calc(var(--parallax-x) * var(--particle-depth) * -1),
+      calc(var(--scroll-y, 0px) * var(--particle-depth) * -0.18 + var(--parallax-y) * var(--particle-depth) * -1),
+      0
+    );
+  }
+  8% { opacity: 0.75; }
+  92% { opacity: 0.6; }
+  100% {
+    opacity: 0;
+    transform: translate3d(
+      calc(var(--parallax-x) * var(--particle-depth) * -1),
+      calc(var(--scroll-y, 0px) * var(--particle-depth) * -0.18 + var(--parallax-y) * var(--particle-depth) * -1 - 140px),
+      0
+    );
+  }
+}
+
+.landing-auth-slot {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.landing-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 44, 143, 0.55), transparent);
+  animation: landingScanSweep 5.5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes landingScanSweep {
+  0% { top: 0%; opacity: 0; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* ── hero / boot sequence ─────────────────────────────────────────────── */
+
+.landing-hero {
+  position: relative;
+  z-index: 1;
+  max-width: 1040px;
+  min-height: calc(100svh - 104px);
+  margin: 0 auto 44px;
+  padding-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.landing-scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  animation: scrollCueBob 2.4s ease-in-out infinite;
+}
+
+.landing-scroll-cue-line {
+  width: 1px;
+  height: 34px;
+  background: linear-gradient(to bottom, transparent, var(--pink) 60%, transparent);
+}
+
+@keyframes scrollCueBob {
+  0%, 100% { transform: translate(-50%, 0); opacity: 0.5; }
+  50% { transform: translate(-50%, 6px); opacity: 1; }
+}
+
+.landing-boot {
+  text-align: left;
+  max-width: 480px;
+  margin: 0 auto 28px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 14px 16px;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.55);
+  min-height: 108px;
+}
+
+.landing-boot-line {
+  line-height: 1.7;
+  white-space: pre;
+}
+
+.landing-boot-line:last-child {
+  color: var(--pink);
+}
+
+.landing-cursor {
+  animation: landingCursorBlink 900ms steps(1) infinite;
+}
+
+@keyframes landingCursorBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* ── title: terminal-decode + periodic RGB-split glitch ─────────────────
+   .landing-title-char renders whatever glyph LandingPage.jsx passes each frame
+   (scrambled noise while decoding, real letters once resolved). Once fully
+   decoded (.is-decoded), ::before/::after clones of the full data-text string
+   sit on top in cyan/red, offset a couple px, and flicker through short jagged
+   clip-path slices at sparse random-feeling intervals - a classic terminal/HUD
+   glitch rather than a constant shimmer. */
+
+.landing-title {
+  position: relative;
+  margin: 0;
+  font-size: clamp(2.4rem, 8vw, 6.4rem);
+  line-height: 1;
+  letter-spacing: 0.03em;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.landing-title-char {
+  display: inline-block;
+  text-shadow: 0 0 32px rgba(255, 44, 143, 0.45), 0 0 64px rgba(255, 44, 143, 0.2);
+}
+
+.landing-title.is-decoded::before,
+.landing-title.is-decoded::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  display: block;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.landing-title.is-decoded::before {
+  color: #34f7ff;
+  animation: landingGlitchSliceCyan 6.4s steps(1) infinite;
+  transform: translate(-2px, 0);
+}
+
+.landing-title.is-decoded::after {
+  color: #ff2c8f;
+  animation: landingGlitchSliceMagenta 6.4s steps(1) infinite;
+  transform: translate(2px, 0);
+}
+
+/* Sparse glitch bursts: mostly invisible, with two short jagged windows per
+   loop so it reads as an occasional signal hiccup, not a constant wobble. */
+@keyframes landingGlitchSliceCyan {
+  0%, 91%, 100% { opacity: 0; clip-path: inset(0 0 100% 0); }
+  92% { opacity: 0.8; clip-path: inset(10% 0 60% 0); transform: translate(-3px, -1px); }
+  93% { opacity: 0.8; clip-path: inset(40% 0 20% 0); transform: translate(2px, 1px); }
+  94% { opacity: 0; clip-path: inset(0 0 100% 0); }
+  97% { opacity: 0.7; clip-path: inset(60% 0 5% 0); transform: translate(-2px, 0); }
+  98% { opacity: 0; clip-path: inset(0 0 100% 0); }
+}
+
+@keyframes landingGlitchSliceMagenta {
+  0%, 91%, 100% { opacity: 0; clip-path: inset(0 0 100% 0); }
+  92% { opacity: 0.8; clip-path: inset(55% 0 15% 0); transform: translate(3px, 0); }
+  93% { opacity: 0.8; clip-path: inset(5% 0 70% 0); transform: translate(-2px, 1px); }
+  94% { opacity: 0; clip-path: inset(0 0 100% 0); }
+  97% { opacity: 0.7; clip-path: inset(15% 0 55% 0); transform: translate(2px, -1px); }
+  98% { opacity: 0; clip-path: inset(0 0 100% 0); }
+}
+
+.landing-subtitle {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.landing-cta-row {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.landing-cta {
+  animation: landingCtaPulse 2.4s ease-in-out infinite;
+  padding: 16px 34px;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.landing-cta-magnetic {
+  --cta-x: 0px;
+  --cta-y: 0px;
+  transform: translate3d(var(--cta-x), var(--cta-y), 0) scale(1);
+  transition: transform 160ms ease-out;
+}
+
+.landing-cta-magnetic:hover {
+  transform: translate3d(var(--cta-x), var(--cta-y), 0) scale(1.045);
+}
+
+@keyframes landingCtaPulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 44, 143, 0); }
+  50% { box-shadow: 0 0 28px rgba(255, 44, 143, 0.6); }
+}
+
+/* ── stats: real pixel-block shells, sized wider + fed real LED digits ──── */
+
+.landing-stats {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  max-width: 920px;
+  margin: 0 auto 48px;
+}
+
+.pixel-block.landing-stat-block {
+  width: 100%;
+  min-height: 168px;
+}
+
+.landing-stat-value {
+  min-height: 60px;
+}
+
+/* ── module cards: same pixel-block shell, wider + text body instead of a digit ── */
+
+.landing-modules {
+  position: relative;
+  z-index: 1;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.landing-module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+  perspective: 900px;
+}
+
+.pixel-block.landing-module-block {
+  width: 100%;
+  min-height: 210px;
+  text-align: left;
+  color: var(--white);
+  font-family: inherit;
+}
+
+/* Scroll-triggered entrance (replaces the old mount-timer landingCardIn) +
+   cursor-magnetic tilt. --tilt-x/--tilt-y/--glow-x/--glow-y are set inline
+   by ModuleCard's pointermove handler in LandingPage.jsx. */
+.reveal-tilt {
+  opacity: 0;
+  transform: translateY(20px) scale(0.96) rotateX(0deg) rotateY(0deg);
+  transition:
+    opacity var(--dur-reveal, 480ms) var(--ease-spring, cubic-bezier(0.22, 1, 0.36, 1)),
+    transform 420ms var(--ease-spring, cubic-bezier(0.22, 1, 0.36, 1));
+  transition-delay: calc(var(--reveal-index, 0) * 55ms);
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+}
+
+.reveal-tilt.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+}
+
+.reveal-tilt.is-visible:hover,
+.reveal-tilt.is-visible:focus-visible {
+  transition: transform 120ms ease-out;
+}
+
+.reveal-tilt .pixel-block-aura {
+  background: radial-gradient(
+    circle at var(--glow-x, 50%) var(--glow-y, 50%),
+    rgba(255, 44, 143, 0.22),
+    transparent 55%
+  );
+}
+
+.landing-module-body {
+  position: relative;
+  z-index: 1;
+  min-height: 84px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 4px 2px;
+}
+
+.landing-module-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.landing-module-desc {
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+}
+
+/* ── footer ───────────────────────────────────────────────────────────── */
+
+.landing-footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  margin-top: 56px;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+@media (max-width: 640px) {
+  .landing-page {
+    padding: 36px 16px 32px;
+  }
+}

@@ -70,8 +70,39 @@ function PathfindingVisualizer() {
     setSteps(opSteps);
     const last = opSteps[opSteps.length - 1];
     const label = ALGO_LABELS[algorithm];
-    setHistory((prev) => [{ id: Date.now(), label, snapshot: last.path.length > 0 ? `path length ${last.path.length}` : `no path (${last.visited.length} visited)` }, ...prev].slice(0, 16));
+    setHistory((prev) =>
+      [
+        {
+          id: Date.now(),
+          label,
+          snapshot: last.path.length > 0 ? `path length ${last.path.length}` : `no path (${last.visited.length} visited)`,
+          // Enough to actually replay this exact run later (see handleRestoreHistory) -
+          // walls/start/end can all change between runs, so the entry needs its own
+          // copy of the grid it ran against, not just a label.
+          algorithm,
+          start,
+          end,
+          walls,
+        },
+        ...prev,
+      ].slice(0, 16)
+    );
     logRun({ algorithm: label, visualizer: 'Pathfinding', inputSize: ROWS * COLS - walls.size, steps: opSteps.length });
+  };
+
+  // History used to just replace the whole step tape with a single fake
+  // message step - selecting a past run showed no real grid state, just text
+  // saying what used to happen. This restores the actual grid that run
+  // happened on and re-runs the same deterministic algorithm, so the debugger
+  // lands on that run's real completed search again (and STEP BACK scrubs
+  // through its actual recorded steps, same as a fresh run).
+  const handleRestoreHistory = (item) => {
+    setAlgorithm(item.algorithm);
+    setStart(item.start);
+    setEnd(item.end);
+    setWalls(item.walls);
+    const runner = ALGORITHMS[item.algorithm];
+    setSteps(runner({ rows: ROWS, cols: COLS, start: item.start, end: item.end, walls: item.walls }));
   };
 
   return (
@@ -106,7 +137,7 @@ function PathfindingVisualizer() {
       />
       <section className="dashboard-grid stage-block stage-delay-4">
         <PathfindingLearningPanel message={current.message} />
-        <HistoryPanel title="HISTORY PANEL" items={history} onSelect={(item) => setSteps([{ visited: [], frontier: [], current: null, path: [], message: `Restored ${item.label}: ${item.snapshot}` }])} />
+        <HistoryPanel title="HISTORY PANEL" items={history} onSelect={handleRestoreHistory} />
       </section>
     </div>
   );

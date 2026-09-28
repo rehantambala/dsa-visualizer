@@ -82,6 +82,13 @@ function GraphVisualizer() {
           id: Date.now(),
           label: `${algorithm.toUpperCase()} from ${startId}`,
           snapshot: visitedOrder || '(unreachable nodes skipped)',
+          // Enough to actually replay this exact run later (see handleRestoreHistory) -
+          // the graph can change (nodes/edges added or removed) between runs, so the
+          // history entry needs its own copy of what it ran against, not just a label.
+          nodes,
+          edges,
+          algorithm,
+          startId,
         },
         ...prev,
       ].slice(0, 16)
@@ -115,6 +122,21 @@ function GraphVisualizer() {
     if (exists) return;
     setEdges((prev) => [...prev, [edgeFrom, edgeTo]]);
     setSteps([IDLE_STEP]);
+  };
+
+  // History used to just reset to the idle placeholder - selecting a past run
+  // showed no actual state, just cleared the screen. This rebuilds the graph
+  // that run happened on and re-runs the same deterministic algorithm/start
+  // node, so the debugger lands on that run's real completed traversal again
+  // (and STEP BACK scrubs through its actual recorded steps, same as a fresh run).
+  const handleRestoreHistory = (item) => {
+    setNodes(item.nodes);
+    setEdges(item.edges);
+    setAlgorithm(item.algorithm);
+    setStartId(item.startId);
+    ensureValidSelections(item.nodes);
+    const generator = item.algorithm === 'dfs' ? dfsSteps : bfsSteps;
+    setSteps(generator(item.nodes, item.edges, item.startId));
   };
 
   const onRandomize = () => {
@@ -183,10 +205,7 @@ function GraphVisualizer() {
         <HistoryPanel
           title="RUN HISTORY"
           items={history}
-          onSelect={() => {
-            debuggerState.reset();
-            setSteps([IDLE_STEP]);
-          }}
+          onSelect={handleRestoreHistory}
         />
       </section>
     </div>

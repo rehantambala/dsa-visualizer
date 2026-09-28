@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DSA_VISUALIZER · intro reference v2</title>
+<!--
+  REFERENCE DESIGN v2 for the intro + login screen. Reproduce this EXACTLY in React.
+  Identity: app's existing pink rgb(255,44,143), white, black, Courier New stack, dot grid, square corners. No webfonts.
+  Pieces:
+   1. #field canvas: the dot grid is a live pathfinding grid. BFS floods from the logo to the cursor
+      (hidden random walls, 14%), then the route lights up. Touch devices: auto-targets every 2.6s.
+   2. Logo "Solved · Explored" 24x24: walls → start → explored flood → V path → goal.
+   3. Title decodes: each char scrambles through glyphs, then settles, left to right.
+   4. Panel: typing pushes cells onto a STACK strip (password = pink masked cells).
+   5. Submit: cells scramble into hex (visual only), then result line:
+      success → "✔ PATH FOUND · ACCESS GRANTED" + full-screen flood; failure → "✖ 401 · NO PATH FOUND".
+  prefers-reduced-motion: no canvas animation, no scramble, end states immediately.
+-->
+<style>
+:root{
+  --bg:#000; --line:#261f24; --fg:#f2edf0; --muted:#8e8189; --wall:#6d5b66; --pink:rgb(255,44,143);
+  --font:"Courier New",Courier,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);overflow-x:hidden;
+  background-image:radial-gradient(var(--line) 1px,transparent 1px),radial-gradient(circle at 50% 30%,rgba(255,44,143,.12),transparent 55%);
+  background-size:28px 28px,100% 100%;background-position:-14px -14px,0 0}
+#field{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#flash{position:fixed;inset:0;background:var(--pink);opacity:0;pointer-events:none;z-index:3;transition:opacity .5s}
+.wrap{position:relative;z-index:1;min-height:100%;display:grid;place-items:center;padding-block:48px;padding-inline:16px}
+.stage{display:flex;flex-direction:column;align-items:center;gap:20px;text-align:center;width:100%;max-width:440px}
+.mark svg{width:clamp(96px,22vw,168px);height:auto;display:block;filter:drop-shadow(0 0 16px rgba(255,44,143,.45))}
+.title{font-weight:700;font-size:clamp(24px,5vw,40px);letter-spacing:.06em;min-height:1.3em;white-space:nowrap;margin:0;
+  text-shadow:0 0 18px rgba(255,44,143,.45)}
+.title i{font-style:normal;color:var(--pink)}
+.title .s{color:var(--pink);opacity:.7}
+.cur{display:inline-block;width:.55em;height:.9em;background:var(--fg);vertical-align:-.08em;margin-left:4px;animation:blink 1s steps(1) infinite}
+.tag{margin:0;color:var(--muted);font-size:13px;letter-spacing:.04em;opacity:0;transition:opacity .6s}
+.hint{margin:-8px 0 0;color:var(--muted);font-size:11px;letter-spacing:.12em;opacity:0;transition:opacity .6s}
+.hint b{color:var(--pink);font-weight:400}
+.auth{width:100%;border:1px solid var(--line);background:rgba(8,5,7,.82);backdrop-filter:blur(2px);padding:18px;display:flex;flex-direction:column;gap:10px;text-align:left;
+  opacity:0;transform:translateY(16px);transition:opacity .6s,transform .6s,border-color .3s,box-shadow .3s}
+.auth.ok{border-color:var(--pink);box-shadow:0 0 28px rgba(255,44,143,.35)}
+.show{opacity:1!important;transform:none!important}
+.head{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.12em;color:var(--muted);gap:10px;flex-wrap:wrap}
+.head .t{color:var(--pink)}
+.toggle{display:flex;gap:6px;align-items:center}
+.toggle button{all:unset;cursor:pointer;color:var(--muted);letter-spacing:.12em;padding:2px 0}
+.toggle button[aria-pressed="true"]{color:var(--pink);text-decoration:underline;text-underline-offset:3px}
+.toggle button:focus-visible{outline:1px solid var(--pink);outline-offset:3px}
+
+.mem{display:flex;align-items:center;gap:8px;min-height:26px;border:1px dashed var(--line);padding:4px 8px;overflow:hidden}
+.mem .lbl{font-size:10px;letter-spacing:.14em;color:var(--muted);flex:none}
+.cells{display:flex;gap:3px;flex-wrap:nowrap;min-width:0;overflow:hidden}
+.cell{width:16px;height:16px;flex:none;display:grid;place-items:center;font-size:11px;border:1px solid var(--wall);color:var(--fg);animation:push .18s ease-out}
+.cell.m{background:var(--pink);border-color:var(--pink);box-shadow:0 0 6px rgba(255,44,143,.6)}
+.cell.h{border-color:var(--pink);color:var(--pink);background:transparent;box-shadow:none}
+.cell.sep{border:0;width:8px;color:var(--muted)}
+.more{font-size:10px;color:var(--muted);flex:none}
+.empty{font-size:11px;color:var(--muted);opacity:.6}
+@keyframes push{from{transform:translateY(-6px) scale(.6);opacity:0}}
+
+.field{display:flex;align-items:center;gap:10px;border:1px solid var(--line);padding:0 12px;transition:border-color .2s,box-shadow .2s;background:rgba(0,0,0,.4)}
+.field:focus-within{border-color:var(--pink);box-shadow:0 0 12px rgba(255,44,143,.25)}
+.field i{color:var(--pink);font-style:normal}
+.field input{all:unset;flex:1;min-width:0;padding:12px 0;font:inherit;font-size:14px;color:var(--fg)}
+.field input::placeholder{color:var(--muted)}
+.eye{all:unset;cursor:pointer;color:var(--muted);font-size:11px;letter-spacing:.12em}
+.eye:hover,.eye:focus-visible{color:var(--pink)}
+.submit{all:unset;box-sizing:border-box;cursor:pointer;border:1px solid var(--pink);padding:12px;text-align:center;letter-spacing:.14em;font-size:13px;
+  background:rgba(255,44,143,.08);transition:background .2s,box-shadow .2s}
+.submit:hover,.submit:focus-visible{background:rgba(255,44,143,.16);box-shadow:0 0 14px rgba(255,44,143,.35)}
+.submit[disabled]{cursor:progress;opacity:.8}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11px;letter-spacing:.14em}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.google{min-height:44px;display:grid;place-items:center;border:1px dashed var(--line);color:var(--muted);font-size:11px;letter-spacing:.1em;padding:6px;text-align:center}
+.log{font-size:12px;min-height:1.3em;margin:0;color:var(--muted);letter-spacing:.04em;overflow-wrap:anywhere}
+.log.err{color:var(--pink)}
+.log.good{color:var(--fg)}
+.log.good b{color:var(--pink);font-weight:400}
+.demo{font-size:11px;color:var(--muted);letter-spacing:.06em;text-align:center;margin:0}
+@keyframes blink{50%{opacity:0}}
+.w,.n,.p{opacity:0;transition:opacity .35s}.p,.n{transition-duration:.12s}.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.cur,.cell{animation:none}.w,.n,.p,.tag,.auth,.hint{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="field" aria-hidden="true"></canvas>
+<div id="flash" aria-hidden="true"></div>
+<div class="wrap">
+<main class="stage">
+  <div class="mark" id="mark"></div>
+  <h1 class="title" id="title" aria-label="DSA_VISUALIZER"></h1>
+  <p class="tag" id="tag">Nine modules. Real algorithms, step by step.</p>
+  <p class="hint" id="hint">move your cursor · <b>the grid is solving for it</b></p>
+
+  <form class="auth" id="auth" novalidate>
+    <div class="head">
+      <span class="t">&gt; ACCESS TERMINAL</span>
+      <span class="toggle"><button type="button" aria-pressed="true" data-mode="login">LOG IN</button> / <button type="button" aria-pressed="false" data-mode="signup">SIGN UP</button></span>
+    </div>
+    <div class="mem" aria-hidden="true"><span class="lbl">STACK</span><div class="cells" id="cells"><span class="empty">empty · start typing</span></div></div>
+    <label class="field"><i>›</i><input id="u" name="username" placeholder="username" autocomplete="username" aria-label="Username" spellcheck="false"></label>
+    <label class="field"><i>›</i><input id="pw" name="password" type="password" placeholder="password" autocomplete="current-password" aria-label="Password"><button type="button" class="eye" id="eye" aria-label="Show password">SHOW</button></label>
+    <p class="log" id="log" role="status"></p>
+    <button class="submit" id="go" type="submit">RUN · LOG IN</button>
+    <div class="or">OR</div>
+    <div class="google">Google button: theme filled_black · rectangular · large · continue_with · full width</div>
+  </form>
+  <p class="demo">Reference demo: leave a field empty to see the error state. Fill both to see success.</p>
+</main>
+</div>
+
+<script>
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const PINK='rgb(255,44,143)',FG='#f2edf0',WALL='#6d5b66';
+
+/* ================= 1. LOGO (24x24 Solved · Explored) ================= */
+const L=[];for(let y=3;y<=20;y++)L.push([3+Math.floor((y-3)*8/17),y]);
+const PATH=L.concat(L.slice().reverse().map(([x,y])=>[23-x,y]));
+const WALLS=[[8,5,8,1],[11,10,2,6],[0,8,1,8],[23,8,1,8],[0,22,7,1],[17,22,7,1],[4,14,1,4],[19,14,1,4],[19,11,3,1],[6,2,1,2]];
+const inWall=(x,y)=>WALLS.some(([a,b,w,h])=>x>=a&&x<a+w&&y>=b&&y<b+h);
+const onPath=new Set(PATH.map(p=>p+''));
+const EXPLORED=[];
+for(let y=0;y<24;y++)for(let x=0;x<24;x++){
+  if(onPath.has([x,y]+'')||inWall(x,y))continue;
+  if((x>=2&&x<=4||x>=19&&x<=21)&&y<=2)continue;
+  let best=99,idx=0;PATH.forEach(([px,py],i)=>{const d=Math.abs(px-x)+Math.abs(py-y);if(d<best){best=d;idx=i}});
+  if(best<=2)EXPLORED.push([x,y,idx+best*2]);
+}
+let s='';
+EXPLORED.forEach(([x,y,d])=>s+=`<rect class="p ex" data-d="${d}" x="${x}" y="${y}" width="1" height="1" fill="${PINK}" fill-opacity=".2"/>`);
+WALLS.forEach((r,i)=>s+=`<rect class="w" data-i="${i}" x="${r[0]}" y="${r[1]}" width="${r[2]}" height="${r[3]}" fill="${WALL}"/>`);
+PATH.forEach(([x,y],i)=>s+=`<rect class="p pv" data-i="${i}" x="${x}" y="${y}" width="1" height="1" fill="${PINK}"/>`);
+s+=`<rect class="n" id="n0" x="2" y="0" width="3" height="3" fill="${FG}"/><rect class="n" id="n1" x="19" y="0" width="3" height="3" fill="${FG}"/>`;
+const mark=document.getElementById('mark');
+mark.innerHTML=`<svg viewBox="0 0 24 24" shape-rendering="crispEdges" role="img" aria-label="DSA Visualizer logo">${s}</svg>`;
+
+/* ================= 2. TITLE DECODE ================= */
+const title=document.getElementById('title');
+const TXT='DSA_VISUALIZER',GLYPHS='01#%&$@<>/\\*+=';
+function renderTitle(done,scr){
+  let h='';for(let i=0;i<TXT.length;i++){
+    if(i<done){h+=TXT[i]==='_'?'<i>_</i>':TXT[i]}
+    else if(i<scr){h+=`<span class="s">${GLYPHS[Math.random()*GLYPHS.length|0]}</span>`}
+  }
+  title.innerHTML=h+'<span class="cur"></span>';
+}
+
+/* ================= 3. INTRO TIMELINE ================= */
+const tag=document.getElementById('tag'),hint=document.getElementById('hint'),auth=document.getElementById('auth');
+let timers=[],introDone=false,decodeRAF;
+const at=(ms,fn)=>timers.push(setTimeout(fn,ms));
+function decode(start){
+  const t0=performance.now()+start;
+  const step=now=>{const e=now-t0;
+    if(e<0){decodeRAF=requestAnimationFrame(step);return}
+    const scr=Math.min(TXT.length,Math.floor(e/45)+3), done=Math.min(TXT.length,Math.floor(Math.max(0,e-160)/45));
+    renderTitle(done,scr);if(done<TXT.length)decodeRAF=requestAnimationFrame(step)};
+  decodeRAF=requestAnimationFrame(step);
+}
+function finishIntro(){if(introDone)return;introDone=true;timers.forEach(clearTimeout);cancelAnimationFrame(decodeRAF);
+  mark.querySelectorAll('rect').forEach(r=>r.classList.add('on'));renderTitle(TXT.length,0);
+  [tag,hint,auth].forEach(el=>el.classList.add('show'));}
+if(reduce){finishIntro()}else{
+  mark.querySelectorAll('.w').forEach(el=>at(+el.dataset.i*45,()=>el.classList.add('on')));
+  at(450,()=>document.getElementById('n0').classList.add('on'));
+  mark.querySelectorAll('.ex').forEach(el=>at(600+ +el.dataset.d*28,()=>el.classList.add('on')));
+  mark.querySelectorAll('.pv').forEach(el=>at(1500+ +el.dataset.i*38,()=>el.classList.add('on')));
+  const tEnd=1500+PATH.length*38;
+  at(tEnd,()=>{document.getElementById('n1').classList.add('on');field.pulse()});
+  decode(tEnd+150);
+  const tT=tEnd+150+TXT.length*45+200;
+  at(tT+150,()=>tag.classList.add('show'));
+  at(tT+450,()=>{auth.classList.add('show');hint.classList.add('show');introDone=true});
+  const skip=e=>{if(!introDone&&!auth.contains(e.target))finishIntro()};
+  addEventListener('pointerdown',skip);addEventListener('keydown',skip);
+}
+
+/* ================= 4. BACKGROUND PATHFINDING FIELD ================= */
+const field=(()=>{
+  const cv=document.getElementById('field'),ctx=cv.getContext('2d');
+  const G=28,SQ=8;let cols,rows,walls,dpr,src=[0,0];
+  let anim=null,bursts=[];
+  function rng(seed){return()=>((seed=Math.imul(seed^seed>>>15,seed|1)+0x6D2B79F5|0)>>>0)/4294967296}
+  function resize(){
+    dpr=Math.min(devicePixelRatio||1,2);cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+    cols=Math.ceil(innerWidth/G)+1;rows=Math.ceil(innerHeight/G)+1;
+    const r=rng(7);walls=new Uint8Array(cols*rows);for(let i=0;i<walls.length;i++)walls[i]=r()<.14?1:0;
+    const b=mark.getBoundingClientRect();src=[Math.round((b.left+b.width/2)/G),Math.min(rows-1,Math.round(b.bottom/G)+1)];
+    walls[src[1]*cols+src[0]]=0;
+  }
+  function bfs(from,to){
+    const n=cols*rows,dist=new Int16Array(n).fill(-1),par=new Int32Array(n).fill(-1),q=new Int32Array(n);
+    let h=0,t=0;const s0=from[1]*cols+from[0];dist[s0]=0;q[t++]=s0;const order=[];
+    const goal=to?to[1]*cols+to[0]:-1;if(goal>=0)walls[goal]=0;
+    while(h<t){const c=q[h++];order.push(c);if(c===goal)break;
+      const x=c%cols,y=c/cols|0;
+      for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=cols||ny>=rows)continue;
+        const k=ny*cols+nx;if(dist[k]>=0||walls[k])continue;dist[k]=dist[c]+1;par[k]=c;q[t++]=k}}
+    const path=[];if(goal>=0&&dist[goal]>=0){let c=goal;while(c>=0){path.push(c);c=par[c]}path.reverse()}
+    return{dist,order,path,maxD:goal>=0&&dist[goal]>=0?dist[goal]:Math.max(...order.map(c=>dist[c]))};
+  }
+  function solve(tx,ty,opts={}){
+    if(reduce)return;const to=[Math.max(0,Math.min(cols-1,Math.round(tx/G))),Math.max(0,Math.min(rows-1,Math.round(ty/G)))];
+    if(anim&&anim.to+''===to+''&&!opts.force)return;
+    const r=bfs(src,opts.full?null:to);anim={...r,to,t0:performance.now(),speed:opts.speed||0.05,full:!!opts.full,alpha:opts.alpha||.16};
+  }
+  function draw(now){
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+    if(anim){
+      const e=now-anim.t0,r=e*anim.speed;
+      for(const c of anim.order){const d=anim.dist[c];if(d>r)break;
+        const age=r-d,a=anim.full?Math.min(.5,anim.alpha+age*.01):anim.alpha*Math.max(0,1-age/22);if(a<=.004)continue;
+        ctx.fillStyle=`rgba(255,44,143,${a})`;const x=(c%cols)*G,y=(c/cols|0)*G;ctx.fillRect(x-SQ/2,y-SQ/2,SQ,SQ)}
+      if(anim.path.length&&r>=anim.maxD){
+        const pe=(r-anim.maxD)/anim.speed,a=Math.max(0,.8-Math.max(0,pe-900)/1400);
+        if(a>0){const shown=Math.min(anim.path.length,Math.floor(pe/14)+1);
+          ctx.fillStyle=`rgba(255,44,143,${a})`;ctx.shadowColor='rgba(255,44,143,.8)';ctx.shadowBlur=8;
+          for(let i=0;i<shown;i++){const c=anim.path[i];ctx.fillRect((c%cols)*G-5,(c/cols|0)*G-5,10,10)}
+          ctx.shadowBlur=0;
+          const g=anim.path[anim.path.length-1];ctx.strokeStyle=`rgba(242,237,240,${a})`;ctx.lineWidth=1.5;ctx.strokeRect((g%cols)*G-8,(g/cols|0)*G-8,16,16)}
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  resize();addEventListener('resize',resize);
+  if(!reduce){
+    let last=0;addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;const n=performance.now();if(n-last<90)return;last=n;solve(e.clientX,e.clientY)});
+    const coarse=matchMedia('(pointer: coarse)').matches;
+    if(coarse)setInterval(()=>{if(!anim||!anim.full)solve(Math.random()*innerWidth,Math.random()*innerHeight,{force:true})},2600);
+    requestAnimationFrame(draw);
+  }
+  return{solve,pulse(){if(reduce)return;const b=mark.getBoundingClientRect();solve(b.left+b.width/2+G*9,b.bottom+G*4,{force:true,speed:.035})},
+    flood(){if(reduce)return;solve(0,0,{full:true,speed:.09,alpha:.12,force:true})},clear(){anim=null}};
+})();
+
+if(matchMedia('(pointer: coarse)').matches)hint.innerHTML='<b>the grid is solving</b> · watch the background';
+/* ================= 5. PANEL: STACK STRIP, SUBMIT ================= */
+const u=document.getElementById('u'),pw=document.getElementById('pw'),cells=document.getElementById('cells'),log=document.getElementById('log'),go=document.getElementById('go');
+let mode='login',busy=false;const MAXC=14;
+function paint(){
+  const items=[...u.value].map(c=>({c,m:false}));
+  if(pw.value.length){items.push({c:'|',sep:true});[...pw.value].forEach(()=>items.push({c:'',m:true}))}
+  if(!items.length){cells.innerHTML='<span class="empty">empty · start typing</span>';return}
+  const vis=items.slice(-MAXC),hidden=items.length-vis.length;
+  const prev=cells.children.length;
+  cells.innerHTML=(hidden?`<span class="more">+${hidden}</span>`:'')+vis.map(it=>`<span class="cell${it.m?' m':''}${it.sep?' sep':''}">${it.sep?'·':it.c.replace(/[<&]/g,'')}</span>`).join('');
+  if(!reduce&&cells.children.length<=prev)[...cells.querySelectorAll('.cell')].forEach(c=>c.style.animation='none');
+}
+u.addEventListener('input',paint);pw.addEventListener('input',paint);
+
+document.querySelectorAll('.toggle button').forEach(b=>b.addEventListener('click',()=>{
+  mode=b.dataset.mode;document.querySelectorAll('.toggle button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  go.textContent=mode==='login'?'RUN · LOG IN':'RUN · CREATE ACCOUNT';pw.autocomplete=mode==='login'?'current-password':'new-password';
+}));
+document.getElementById('eye').addEventListener('click',e=>{const show=pw.type==='password';
+  pw.type=show?'text':'password';e.target.textContent=show?'HIDE':'SHOW';e.target.setAttribute('aria-label',show?'Hide password':'Show password')});
+
+const HEX='0123456789abcdef';
+function scramble(ms){return new Promise(res=>{
+  const list=[...cells.querySelectorAll('.cell:not(.sep)')];if(reduce||!list.length)return res();
+  list.forEach(c=>c.classList.add('h'));const t0=performance.now();
+  const f=n=>{list.forEach(c=>c.textContent=HEX[Math.random()*16|0]);if(n-t0<ms)requestAnimationFrame(f);else res()};requestAnimationFrame(f);})}
+const wait=ms=>new Promise(r=>setTimeout(r,reduce?0:ms));
+function digest(str){let h=0x811c9dc5;for(const ch of str){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return(h>>>0).toString(16).padStart(8,'0')}
+
+auth.addEventListener('submit',async e=>{
+  e.preventDefault();if(busy)return;busy=true;go.disabled=true;auth.classList.remove('ok');log.className='log';
+  go.textContent='AUTHENTICATING…';log.textContent='» pushing '+(u.value.length+pw.value.length)+' cells…';
+  await scramble(650);
+  log.textContent='» encoded · '+digest(u.value+':'+pw.value)+'… · sending';
+  await wait(700);
+  // ---- In React: replace this block with the real API call ----
+  const ok=u.value.trim()&&pw.value;
+  if(ok){
+    log.className='log good';log.innerHTML='<b>✔</b> PATH FOUND · ACCESS GRANTED';auth.classList.add('ok');field.flood();
+    await wait(1100);document.getElementById('flash').style.opacity=.9;await wait(450);
+    log.innerHTML='<b>›</b> entering the lab…';document.getElementById('flash').style.opacity=0;
+    await wait(1600);field.clear();auth.classList.remove('ok');log.textContent='';u.value='';pw.value='';paint();   // demo reset
+  }else{
+    log.className='log err';log.textContent='✖ 401 · NO PATH FOUND · wrong username or password';
+    auth.animate?.([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:260});
+    paint();
+  }
+  go.textContent=mode==='login'?'RUN · LOG IN':'RUN · CREATE ACCOUNT';go.disabled=false;busy=false;
+});
+/* network failure copy for React: "✖ NO ROUTE TO SERVER · is the backend running?" */
+</script>
+</body>
+</html>

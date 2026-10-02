@@ -37,6 +37,7 @@ import { useSound } from "./hooks/useSound.js";
 import "./components/graph/graph.css";
 
 const SESSION_GATE_MS = 400;
+const NO_HANDOFF = { landing: false, brand: true };
 
 function App() {
   const auth = useAuth();
@@ -61,6 +62,7 @@ function App() {
   // background (max SESSION_GATE_MS) so a valid cookie never flashes the
   // intro and an expired one never flashes the landing page.
   const [gateExpired, setGateExpired] = useState(false);
+  const [handoff, setHandoff] = useState(NO_HANDOFF);
 
   const handleModeChange = (nextMode, event) => {
     if (nextMode === mode || transitionPhase !== "idle") return;
@@ -111,7 +113,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!auth.isLoggedIn) setIntroOpen(true);
+    if (!auth.isLoggedIn) { setIntroOpen(true); setHandoff(NO_HANDOFF); }
     else if (!introBusy.current) setIntroOpen(false);
   }, [auth.isLoggedIn]);
 
@@ -176,18 +178,32 @@ function App() {
     return <div className="ix" aria-hidden="true" />;
   }
 
-  if (introOpen) {
+  // Intro and landing render side by side during the entry transition: the
+  // intro mounts the landing underneath at its "traverse" step (onReveal),
+  // flies its pixel into the landing's brand (onBrandOn), then unmounts
+  // (onDone). Same element order before and after, so the landing never
+  // remounts at the handoff. .landing-layer is its own stacking context below
+  // the intro's #portal/#sing overlays.
+  if (introOpen || view === "landing") {
+    const showLanding = !introOpen || handoff.landing;
     return (
-      <IntroScreen
-        auth={auth}
-        onBusyChange={(busy) => { introBusy.current = busy; }}
-        onDone={() => { introBusy.current = false; setIntroOpen(false); }}
-      />
+      <>
+        {showLanding && (
+          <div className="landing-layer">
+            <LandingPage onEnter={handleEnter} auth={auth} brandVisible={!introOpen || handoff.brand} entrance={introOpen} />
+          </div>
+        )}
+        {introOpen && (
+          <IntroScreen
+            auth={auth}
+            onBusyChange={(busy) => { introBusy.current = busy; }}
+            onReveal={() => setHandoff({ landing: true, brand: false })}
+            onBrandOn={() => setHandoff((h) => ({ ...h, brand: true }))}
+            onDone={() => { introBusy.current = false; setIntroOpen(false); setHandoff(NO_HANDOFF); }}
+          />
+        )}
+      </>
     );
-  }
-
-  if (view === "landing") {
-    return <LandingPage onEnter={handleEnter} auth={auth} />;
   }
 
   return (

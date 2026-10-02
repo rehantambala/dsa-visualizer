@@ -18,7 +18,20 @@
 }
 
 .ix-field { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
-.ix-flash { position: fixed; inset: 0; background: var(--pink); opacity: 0; pointer-events: none; z-index: 3; transition: opacity 0.5s; }
+
+/* ---- entry transition (reference section 6) - rule bodies verbatim ---- */
+#portal{position:fixed;inset:0;width:100%;height:100%;z-index:6;pointer-events:none;display:none}
+#sing{position:fixed;z-index:7;width:8px;height:8px;background:var(--pink);pointer-events:none;display:none;
+  box-shadow:0 0 12px 3px rgba(255,44,143,.8),0 0 40px 10px rgba(255,44,143,.35);
+  transition:left .75s cubic-bezier(.2,.8,.2,1),top .75s cubic-bezier(.2,.8,.2,1),width .75s cubic-bezier(.2,.8,.2,1),height .75s cubic-bezier(.2,.8,.2,1),opacity .25s}
+.ix-ui{display:flex;flex-direction:column;align-items:center;gap:20px;width:100%}
+.crt-off{animation:crt .52s cubic-bezier(.6,0,.9,.4) forwards}
+@keyframes crt{0%{transform:none;opacity:1}55%{transform:scaleY(.006);opacity:1;filter:brightness(2.2)}100%{transform:scale(0,.006);opacity:0}}
+.ix-mark.collapse svg{animation:collapse .45s cubic-bezier(.7,0,.9,.5) forwards}
+@keyframes collapse{to{transform:scale(.05);filter:drop-shadow(0 0 22px rgba(255,44,143,1)) brightness(2)}}
+.ix-wrap.gone{visibility:hidden}
+/* step d: the landing page (App.jsx .landing-layer) takes over the document */
+.ix.is-revealed{display:none}
 
 .ix-wrap { position: relative; z-index: 1; min-height: 100vh; display: grid; place-items: center; padding-block: 48px; padding-inline: 16px; }
 .ix-stage { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; width: 100%; max-width: 440px; }

@@ -23,6 +23,7 @@ import PixelNumber from '../shared/PixelNumber.jsx';
 import { useSound } from '../../hooks/useSound.js';
 import { useRevealOnScroll } from '../../hooks/useRevealOnScroll.js';
 import Reveal from '../shared/Reveal.jsx';
+import Logo from '../Logo.jsx';
 import './landing.css';
 
 const MODULES = [
@@ -263,7 +264,10 @@ function ModuleCard({ module, index, onEnter }) {
   );
 }
 
-function LandingPage({ onEnter, auth }) {
+// brandVisible: false while the intro's entry transition is still flying its
+// pixel into the brand slot (IntroScreen.jsx). entrance: arrived through that
+// transition - its traverse reveal IS the entrance, so skip the mount burst.
+function LandingPage({ onEnter, auth, brandVisible = true, entrance = false }) {
   const [runsLogged, setRunsLogged] = useState(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const { sounds } = useSound();
@@ -340,6 +344,7 @@ function LandingPage({ onEnter, auth }) {
   };
 
   useEffect(() => {
+    if (entrance) return undefined;
     // Fire the real energy-burst effect once on mount, from where the title sits -
     // this is the exact same transition App.jsx fires when switching visualizer pages.
     const t = setTimeout(() => {
@@ -422,6 +427,14 @@ function LandingPage({ onEnter, auth }) {
             />
           ))}
         </div>
+      </div>
+
+      <div className={`landing-brand${brandVisible ? ' is-on' : ''}`}>
+        <Logo variant="clean" mode="live" size={28} />
+        <span className="landing-brand-word" aria-label="DSA_VISUALIZER">
+          <span className="full">DSA<i>_</i>VISUALIZER</span>
+          <span className="short" aria-hidden="true">DSA<i>_</i>VIS</span>
+        </span>
       </div>
 
       <div className="landing-auth-slot">

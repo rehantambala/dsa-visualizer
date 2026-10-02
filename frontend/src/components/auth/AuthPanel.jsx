@@ -10,12 +10,11 @@
  *   API call (useAuth login/register) → success or a pink ✖ error line
  * - Google sign-in goes through the same success/failure handling
  *
- * Success hooks let the host add its own moment before moving on:
- *   onGranted() - after "✔ PATH FOUND · ACCESS GRANTED" (intro: flood + flash)
- *   onEntered() - after "› entering the lab…" (intro: hand off to the app)
- * onBusyChange(bool) tells the host a submit is in flight, so it can keep this
- * panel on screen while the success sequence plays even though useAuth has
- * already flipped isLoggedIn.
+ * onSuccess() runs after "✔ PATH FOUND · ACCESS GRANTED" - the host decides
+ * what happens next (intro: the COLLAPSE → TRAVERSE entry transition; modal:
+ * a short beat, then close). onBusyChange(bool) tells the host a submit is in
+ * flight, so it can keep this panel on screen while that plays even though
+ * useAuth has already flipped isLoggedIn.
  */
 import { forwardRef, useEffect, useRef, useState } from 'react';
 import GoogleSignInButton from './GoogleSignInButton.jsx';
@@ -61,7 +60,7 @@ function errorLine(err, method) {
 }
 
 const AuthPanel = forwardRef(function AuthPanel(
-  { auth, revealed = true, onBusyChange, onGranted, onEntered, className = '' },
+  { auth, revealed = true, onBusyChange, onSuccess, className = '' },
   ref
 ) {
   const [mode, setMode] = useState('login');
@@ -120,10 +119,7 @@ const AuthPanel = forwardRef(function AuthPanel(
     sounds.success();
     setLog({ kind: 'good', text: 'granted' });
     setOk(true);
-    await onGranted?.();
-    if (!mounted.current) return;
-    setLog({ kind: 'good', text: 'entering' });
-    await onEntered?.();
+    await onSuccess?.();
   };
 
   const fail = (err, method) => {
@@ -236,9 +232,7 @@ const AuthPanel = forwardRef(function AuthPanel(
       </label>
 
       <p className={`term-log ${log.kind}`} role="status">
-        {log.text === 'granted' ? <><b>✔</b> PATH FOUND · ACCESS GRANTED</>
-          : log.text === 'entering' ? <><b>›</b> entering the lab…</>
-          : log.text}
+        {log.text === 'granted' ? <><b>✔</b> PATH FOUND · ACCESS GRANTED</> : log.text}
       </p>
       <button className="term-submit" type="submit" disabled={busy}>
         {busy ? 'AUTHENTICATING…' : mode === 'login' ? 'RUN · LOG IN' : 'RUN · CREATE ACCOUNT'}

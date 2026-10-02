@@ -39,7 +39,7 @@ function AuthModal({ auth, onClose, onCancel, hint }) {
           {hint && <p className="auth-modal-hint">{hint}</p>}
           <button type="button" className="auth-close" onClick={handleDismiss} aria-label="Close">CLOSE ×</button>
         </div>
-        <AuthPanel auth={auth} onGranted={() => pause(600)} onEntered={onClose} />
+        <AuthPanel auth={auth} onSuccess={async () => { await pause(600); onClose(); }} />
       </div>
     </div>
   );

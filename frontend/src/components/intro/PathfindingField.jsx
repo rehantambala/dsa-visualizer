@@ -12,7 +12,8 @@
  * - fully torn down on unmount (i.e. once the user is logged in)
  * - never started under prefers-reduced-motion
  *
- * Imperative handle: pulse() (goal-lit ripple), flood() (success), clear().
+ * Imperative handle: pulse() (goal-lit ripple), implode(dur) (entry transition:
+ * reverse BFS, a ring contracting from the screen edges into the logo), clear().
  */
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
@@ -29,7 +30,7 @@ const PathfindingField = forwardRef(function PathfindingField({ sourceRef }, ref
 
   useImperativeHandle(ref, () => ({
     pulse: () => apiRef.current?.pulse(),
-    flood: () => apiRef.current?.flood(),
+    implode: (dur) => apiRef.current?.implode(dur),
     clear: () => apiRef.current?.clear(),
   }), []);
 
@@ -82,6 +83,15 @@ const PathfindingField = forwardRef(function PathfindingField({ sourceRef }, ref
     function draw(now) {
       ctx.clearRect(0, 0, innerWidth, innerHeight);
       if (!anim) return false;
+      if (anim.implode) {
+        const e = now - anim.t0, r = anim.maxD * (1 - Math.min(1, e / anim.dur));
+        for (const c of anim.order) {
+          const d = anim.dist[c]; const band = d - r; if (band < 0 || band > 5) continue;
+          const a = 0.6 * (1 - band / 5); ctx.fillStyle = `rgba(255,44,143,${a})`; ctx.fillRect((c % cols) * G - SQ / 2, (c / cols | 0) * G - SQ / 2, SQ, SQ);
+        }
+        if (e > anim.dur) anim = null; // next frame clears, then the loop stops
+        return true;
+      }
       let alive = anim.full;
       const e = now - anim.t0, r = e * anim.speed;
       if (r < anim.maxD + 22) alive = true;
@@ -120,7 +130,7 @@ const PathfindingField = forwardRef(function PathfindingField({ sourceRef }, ref
 
     apiRef.current = {
       pulse() { const b = sourceRef.current?.getBoundingClientRect(); if (b) solve(b.left + b.width / 2 + G * 9, b.bottom + G * 4, { force: true, speed: 0.035 }); },
-      flood() { solve(0, 0, { full: true, speed: 0.09, alpha: 0.12, force: true }); },
+      implode(dur) { const r = bfs(src, null); anim = { ...r, implode: true, dur, t0: performance.now() }; start(); },
       clear() { anim = null; stop(); ctx.clearRect(0, 0, innerWidth, innerHeight); },
     };
 

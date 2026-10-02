@@ -434,3 +434,50 @@
     padding: 36px 16px 32px;
   }
 }
+
+/* ── top-left brand: where the intro's flying pixel lands ──────────────
+   Geometry from design/intro-reference.html (.lbar padding 16px 20px,
+   .brand svg 28px, .word 700/16px/.06em). The mark stays hidden until the
+   pixel arrives (see IntroScreen.jsx enterLab). */
+.landing-brand {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--white);
+}
+
+.landing-brand .logo {
+  display: block;
+  width: 28px;
+  height: 28px;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.landing-brand.is-on .logo {
+  opacity: 1;
+}
+
+.landing-brand-word {
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.landing-brand-word i {
+  font-style: normal;
+  color: var(--pink);
+}
+
+@media (max-width: 600px) {
+  .landing-brand-word .full { display: none; }
+}
+
+@media (min-width: 601px) {
+  .landing-brand-word .short { display: none; }
+}
